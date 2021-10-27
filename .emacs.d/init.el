@@ -63,6 +63,7 @@
   (put 'dired-find-alternate-file 'disabled nil)
   (display-time-default-load-average nil)
   :config
+  (setq indent-tabs-mode nil)
   (setq display-time-day-and-date t)
   (setq display-time-24hr-format t)
   (setq undo-limit 800000)
@@ -262,7 +263,7 @@
   (define-key projectile-mode-map (kbd "C-c p s s") 'helm-rg)
   )
 
-					; projectile extension for Helm
+
 (use-package helm-projectile
   :after helm
   :diminish
@@ -281,7 +282,6 @@
 	projectile-globally-ignored-directories '(".git" "node_modules" "__pycache__" ".mypy_cache")
 	projectile-globally-ignored-files '("TAGS" "tags" ".DS_Store" "GTAGS")
 	projectile-mode-line-prefix " - "
-	projectile-tags-command "ctags -R -e --languages=php --fields=afiklmnst --file-scope=yes --format=2"
 	)
 
   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
