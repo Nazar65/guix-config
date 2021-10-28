@@ -34,7 +34,6 @@
 
 (use-package use-package-ensure-system-package)
 
-
 (use-package emacs
   :straight (:type built-in)
   :bind (("C-h"     . 'backward-delete-char-untabify)
@@ -327,6 +326,12 @@
   :config
   (setq company-idle-delay 0.3)
   (global-company-mode t))
+
+(use-package gnus-notify
+  :straight
+ (gnus-notify
+  :local-repo "~/.emacs.d/src/gnus-notify"
+  :type nil))
 
 ;; PHP settings
 ;; ===============================================
