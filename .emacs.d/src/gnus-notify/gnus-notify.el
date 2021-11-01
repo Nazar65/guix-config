@@ -75,23 +75,16 @@ contains new messages"))
 
 
 (defun gnus-mst-notify-shorten-group-name (group)
-  "shorten the group name to make it better fit on the modeline"
-  (let ((name (if (string-match ":" group)
-                  (cadr (split-string group "[:]"))
-                group)))
-    (mapconcat 'identity
-               (mapcar
-                (lambda (segment)
-                  (string (elt segment 0)))
-                (split-string name "[\\./]"))
-               ".")))
-
+  (let ((mapped-name (assoc group group-name-map)))
+    (if (null mapped-name)
+        group
+      (cdr mapped-name))))
 
 (defun gnus-mst-notify-update-modeline ()
   "Update the modeline to show groups containing new messages"
   (if gnus-mst-notify-groups
       (setq gnus-mst-display-new-messages
-            (append (list " [m: ")
+            (append (list " [Mail: ")
                     (cl-maplist
                      (lambda (sublist)
                        (let ((group (car sublist))

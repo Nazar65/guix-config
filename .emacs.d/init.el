@@ -63,6 +63,7 @@
   (display-time-default-load-average nil)
   :config
   (setq indent-tabs-mode nil)
+  (setq display-time-mail-string "")
   (setq display-time-day-and-date t)
   (setq display-time-24hr-format t)
   (setq undo-limit 800000)
