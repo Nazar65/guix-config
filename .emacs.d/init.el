@@ -122,6 +122,14 @@
   (backup-directory-alist '((".*" . "~/.emacs.d/backups/")))
   (auto-save-file-name-transforms '((".*" "~/.emacs.d/backups/" t))))
 
+(use-package proceed
+  :straight (:type built-in)
+  :no-require t
+  :hook (add-hook 'proced-mode-hook 'proced-settings)
+  :config
+  (defun proced-settings ()
+    (proced-toggle-auto-update))
+  )
 (use-package custom
   :straight (:type built-in)
   :no-require t
@@ -140,8 +148,6 @@
   (exwm-randr-enable)
   (exwm-enable)
   :config
-  ;; When window title updates, use it to set the buffer name
-  (add-hook 'exwm-update-title-hook #'efs/exwm-update-title)
   ;; Configure windows as they're created
   (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
   ;; When EXWM starts up, do some extra confifuration
@@ -150,24 +156,14 @@
   (defun efs/configure-window-by-class ()
     (interactive)
     (pcase exwm-class-name
-      ("Slack" (exwm-workspace-move-window 0))
       ("Skype" (exwm-workspace-move-window 0))
-      ("eshell" (exwm-workspace-move-window 1))
-      ("firefox" (exwm-workspace-move-window 2))
-      ))
+      ("eshell" (exwm-workspace-move-window 1))))
 
   (defun efs/exwm-init-hook ()
     ;; Make workspace 1 be the one where we land at startup
     (exwm-workspace-switch-create 1)
-
     ;; Open eshell by default
-    (eshell)
-
-    )
-  (defun efs/exwm-update-title ()
-    (pcase exwm-class-name
-      ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title))))
-    )
+    (eshell))
 
   (setq exwm-input-global-keys
         `(
@@ -227,13 +223,13 @@
   :custom
   system-packages-noconfirm t)
 
-(use-package diminish)
-
 (use-package helm
   :init (helm-mode)
+  :straight t
   :bind (("C-x b" . 'helm-mini)
 	 ("C-x f" . 'helm-find-files))
   :config
+  (require 'helm-config)
   (define-key global-map [remap find-file] 'helm-find-files)
   (define-key global-map [remap occur] 'helm-occur)
   (define-key global-map [remap list-buffers] 'helm-buffers-list)
@@ -251,28 +247,24 @@
 	helm-etag-fuzzy-match t
 	helm-buffers-fuzzy-matching t
 	helm-recentf-fuzzy-match t
-
-	helm-autoresize-min-height 20
-	)
-  (require 'helm-config))
+	helm-autoresize-min-height 20))
 
 ;; Helm rg depends on ripgrep
 (use-package helm-rg
+  :straight t
   :after helm-projectile
-  :config
-  (define-key projectile-mode-map (kbd "C-c p s s") 'helm-rg)
-  )
-
+  :init
+  (define-key projectile-mode-map (kbd "C-c p s s") 'helm-rg))
 
 (use-package helm-projectile
+  :straight t
   :after helm
-  :diminish
   :hook (projectile-mode . helm-projectile-on)
-  :commands helm-projectile
-  )
+  :commands helm-projectile)
 
 ;; Projectile mode and extensions
 (use-package projectile
+  :straight t
   :init (projectile-mode)
   :after helm
   :config
@@ -302,6 +294,7 @@
 
 ;; Icons for dired sidebar
 (use-package vscode-icon
+  :straight t
   :after dired-sidebar
   )
 
@@ -313,26 +306,23 @@
 
 ;; smart-mode-line
 (use-package smart-mode-line
+  :straight t
   :init(smart-mode-line-enable)
   :config
   (setq sml/theme 'atom-one-dark)
   (sml/setup))
 
 (use-package doom-themes
+  :straight t
   :init(load-theme 'doom-one t)
   :config
   (doom-themes-visual-bell-config))
 
 (use-package company
+  :straight t
   :config
   (setq company-idle-delay 0.3)
   (global-company-mode t))
-
-(use-package gnus-notify
-  :straight
- (gnus-notify
-  :local-repo "~/.emacs.d/src/gnus-notify"
-  :type nil))
 
 ;; PHP settings
 ;; ===============================================
@@ -342,6 +332,7 @@
   )
 
 (use-package lsp-mode
+  :straight t
   :config
   (setq lsp-completion-provider :capf)
   (lsp-register-client
@@ -349,8 +340,7 @@
     :new-connection
     (lsp-tcp-server
      (lambda (port)
-       `("php72",
-         (expand-file-name "~/.config/composer/vendor/felixfbecker/language-server/bin/php-language-server.php"),
+       `("php72",         (expand-file-name "~/.config/composer/vendor/felixfbecker/language-server/bin/php-language-server.php"),
          (format "--tcp=localhost:%s" port)"--memory-limit=9095M")))
     :major-modes '(php-mode)
     :server-id 'php-ls))
@@ -364,7 +354,7 @@
   :commands lsp)
 
 (use-package lsp-ui
-  :diminish
+  :straight t
   :hook (lsp-mode . lsp-ui-mode)
   :requires lsp-mode flycheck
   :custom
@@ -373,6 +363,7 @@
   (lsp-ui-doc-delay 5))
 
 (use-package phpunit
+  :straight t
   :after php-mode
   :config
   ;;phpunit settings
@@ -384,7 +375,7 @@
 
 ;; PHP debugger
 (use-package dap-mode
-  :diminish
+  :straight t
   :after lsp-mode
   :init (dap-mode -1)
   :config
@@ -401,6 +392,7 @@
 
 ;; For csv files
 (use-package csv-mode
+  :straight t
   :mode (("\\.[Cc][Ss][Vv]\\'" . csv-mode))
   :config
   (add-hook 'csv-mode-hook 'csv-align-mode)
@@ -408,6 +400,7 @@
 
 ;; Php mode
 (use-package php-mode
+  :straight t
   :config
   (add-hook 'php-mode-hook
             (lambda ()
@@ -422,6 +415,7 @@
 
 ;; Flycheck to check syntax
 (use-package flycheck
+  :straight t
   :config
   (add-hook 'js2-mode-hook 'flycheck-mode)
   (add-hook 'php-mode-hook 'flycheck-mode)
@@ -429,23 +423,153 @@
 	(cons '("\\.el\\'" . flycheck-mode) auto-mode-alist))
   )
 
-;; Magit settings
-;; ===============================================
+(use-package gnus-notify
+  :after gnus
+  :load-path ("~/.emacs.d/src/gnus-notify"))
 
-(use-package magit
+(use-package smtpmail :straight t)
+
+(use-package gnus
+  :straight (:type built-in)
+  :init
+  (gnus-demon-init)
+  (gnus-topic-mode)
   :config
-  (global-set-key (kbd "C-x g") 'magit-status)
-  )
+  (setq gnus-secondary-select-methods '((nnml "local.mail")
+          (nntp "news.gnus.org")
+          (nnimap "gmail"
+                  (nnimap-address "imap.gmail.com")
+                  (nnimap-server-port "imaps")
+                  (nnimap-stream ssl))
+          (nnimap "i4"
+                  (nnimap-address "imap.gmail.com")
+                  (nnimap-server-port "imaps")
+                  (nnimap-stream ssl))))
+  (setq smtpmail-smtp-server "smtp.gmail.com"
+        smtpmail-smtp-service 587
+        gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]")
+  (setq send-mail-function 'smtpmail-send-it
+        smtpmail-default-smtp-server "smtp.gmail.com")
+  (setq gnus-parameters
+        '(("INBOX"
+           (gnus-use-adaptive-scoring nil)
+           (gnus-use-scoring nil)
+           (visible . t)
+           (display . all)
+           (modeline-notify . t)
+           )
+          ("mail.misc"
+           (gnus-use-adaptive-scoring nil)
+           (gnus-use-scoring nil)
+           (visible . t)
+           (display . all)
+           (modeline-notify . t)
+           ))
+        user-mail-address	"nazarn96@gmail.com"
+        user-full-name	"Nazar Klovanych"
+        mail-sources
+        '((file :path "/var/spool/mail/nazar"))
+        group-name-map '(("nnml+local.mail:mail.misc" . "Local")
+                         ("nnimap+gmail:INBOX" . "Gmail")
+                         ("nnimap+i4:INBOX" . "i4"))
+        gnus-thread-sort-functions
+        '((not gnus-thread-sort-by-number)
+          gnus-thread-sort-by-score)
+        gnus-select-method '(nnnil)
+        w3m-fill-column 100
+        mm-text-html-renderer 'gnus-w3m
+        w3m-toggle-inline-images t
+        w3m-default-display-inline-images t
+        mm-inline-text-html-with-images t)
+  (gnus-demon-add-handler 'gnus-group-get-new-news 1 nil))
+
+(use-package slack
+  :straight (:type git :host github :repo "yuya373/emacs-slack")
+  :commands (slack-start)
+  :init
+  (setq slack-render-image-p t)
+  (setq tracking-max-mode-line-entries 0)
+  (setq slack-buffer-emojify t)
+  (setq slack-prefer-current-team t)
+  :config
+  (setq slack-completing-read-function
+        #'ido-completing-read)
+  (define-key ctl-x-map "j" #'slack-select-rooms)
+  (define-key slack-mode-map "@"
+    (defun endless/slack-message-embed-mention ()
+      (interactive)
+      (call-interactively #'slack-message-embed-mention)
+      (insert " ")))
+  (define-key slack-mode-map (kbd "C-c C-d")
+    #'slack-message-delete)
+  (define-key slack-mode-map (kbd "C-c C-e")
+    #'slack-message-edit)
+  (define-key slack-mode-map (kbd "C-c C-k")
+    #'slack-channel-leave)
+  (slack-register-team
+   :name "i4"
+   :token (auth-source-pick-first-password
+           :host '("i4.slack.com")
+           :user "token" :type 'netrc :max 1)
+   :cookie (auth-source-pick-first-password
+            :host '("i4.slack.com")
+            :user "cookie" :type 'netrc :max 1)
+   :subscribed-channels '((general))))
+
+(use-package oauth2 :after (slack))
+(use-package request :after (slack))
+(use-package websocket :after (slack))
+(use-package alert
+  :straight (:type git :repo "jwiegley/alert")
+  :commands (alert)
+  :init
+  (setq alert-default-style 'libnotify))
+
+(use-package eaf-browser
+  :after eaf
+  :straight '(eaf-browser
+              :type git
+              :host github
+              :repo "emacs-eaf/eaf-browser"
+              :pre-build ((start-process-shell-command "" nil  "ln -sf ~/.emacs.d/straight/repos/emacs-application-framework/app/browser/* ~/.emacs.d/straight/build/eaf-browser/")))
+  :config
+  (eaf-bind-key eaf-next-buffer-same-app "C-." eaf-browser-keybinding)
+  (eaf-bind-key eaf-previous-buffer-same-app "C-," eaf-browser-keybinding))
+
+;; Need to run ~/.emacs.d/straight/repos/emacs-application-framework/install-eaf.py
+;; Mannually as it requires sudo passwords to install dependencies
+(use-package eaf
+  :straight '(eaf :type git
+                  :host github
+                  :repo "emacs-eaf/emacs-application-framework"
+                  :files ("*"))
+  :custom
+  (eaf-browser-continue-where-left-off t)
+  (eaf-browser-enable-adblocker t)
+  (eaf-browser-enable-autofill t)
+  (browse-url-browser-function 'eaf-open-browser)
+  :config
+  (setq eaf-browse-blank-page-url "https://duckduckgo.com")
+  (setq eaf-browser-default-search-engine "duckduckgo")
+  (defalias 'browse-web #'eaf-open-browser)
+  (global-set-key (kbd "s-/") 'browse-web)
+  (global-set-key (kbd "s-\\") 'eaf-search-it))
+(use-package magit
+  :straight (:type git :repo "magit/magit")
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status))
 
 ;; Styles section css
 ;; ===============================================
 (use-package css-mode
+  :straight t
   :config
   (setq auto-mode-alist
 	(cons '("\\.css\\'" . css-mode) auto-mode-alist)))
 
 ;; Sort css attributes
 (use-package com-css-sort
+  :straight t
   :after css-mode
   :config
   (setq com-css-sort-sort-type 'alphabetic-sort)
@@ -459,11 +583,13 @@
 
 ;; General javascript mode
 (use-package js2-mode
+  :straight t
   :config
   (add-hook 'php-mode-hook 'whitespace-mode))
 
 ;; Autocomplete mode for javascript
 (use-package ac-js2
+  :straight t
   :after js2-mode
   :config
   (add-to-list 'company-backends 'ac-js2-company)
@@ -472,6 +598,7 @@
   )
 ;; Run jscs sniffer to fix edited file
 (use-package jscs
+  :straight t
   :config
   (add-hook 'js2-mode-hook #'jscs-fix-run-before-save)
   (setq flycheck-eslintrc "~/.eslintrc"))

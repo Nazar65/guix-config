@@ -84,7 +84,7 @@ contains new messages"))
   "Update the modeline to show groups containing new messages"
   (if gnus-mst-notify-groups
       (setq gnus-mst-display-new-messages
-            (append (list " [Mail: ")
+            (append (list " [Mail ")
                     (cl-maplist
                      (lambda (sublist)
                        (let ((group (car sublist))
