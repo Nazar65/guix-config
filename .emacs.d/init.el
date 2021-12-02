@@ -51,6 +51,7 @@
          ("C-<f5>"  . display-line-numbers-mode)
          ("C-c d"   . 'local/duplicate-start-of-line-or-region)
          ([remap dabbrev-expand] . 'hippie-expand))
+  :mode (("\\.[Ee][Ll]\\'" . emacs-lisp-mode))
   :hook ((before-save . delete-trailing-whitespaces)
          (emacs-startup . (lambda ()
                             (let ((startup-time (float-time (time-subtract after-init-time before-init-time))))
@@ -141,6 +142,7 @@
   :init
   (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
   (add-hook 'exwm-init-hook #'efs/exwm-init-hook)
+  (add-hook 'exwm-randr-screen-change-hook #'efs/exwm-change-screen-hook)
   (require 'exwm-randr)
   (require 'exwm-systemtray)
   (exwm-systemtray-enable)
@@ -151,7 +153,7 @@
     (interactive)
     (pcase (buffer-name)
       ("*eshell*" (exwm-workspace-move 1))
-      ("DuckDuckGo — Privacy, simplified." (exwm-workspace-move 2 0) (alert "hee"))))
+      ("DuckDuckGo — Privacy, simplified." (exwm-workspace-move 2 0))))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (eshell)
@@ -178,12 +180,23 @@
                           (interactive)
                           (exwm-workspace-switch-create ,i))))
                     (number-sequence 0 9))))
-  (add-hook 'exwm-randr-screen-change-hook
-            (lambda ()
-              (start-process-shell-command
-               "xrandr" nil "xrandr --output HDMI-1-0 --primary --auto --pos 1920x0 --rotate normal
-                                   --output eDP-1 --auto --pos 0x0 --rotate normal"))
-            (setq exwm-randr-workspace-output-plist '(0 "eDP-1" 1 "HDMI-1-0"))))
+
+  (defun efs/exwm-change-screen-hook ()
+    (let ((xrandr-output-regexp "\n\\([^ ]+\\) connected ")
+          default-output)
+      (with-temp-buffer
+        (call-process "xrandr" nil t nil)
+        (goto-char (point-min))
+        (re-search-forward xrandr-output-regexp nil 'noerror)
+        (setq default-output (match-string 1))
+        (forward-line)
+        (if (not (re-search-forward xrandr-output-regexp nil 'noerror))
+	    (call-process "xrandr" nil nil nil "--output" default-output "--auto")
+          (call-process
+           "xrandr" nil nil nil
+           "--output" (match-string 1) "--primary"  "--auto" "--pos" "1920x0" "--rotate" "normal"
+	   "--output" default-output "--auto" "--pos" "0x0" "--rotate" "normal") 
+          (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
 (use-package async
   :after bytecomp
@@ -225,9 +238,15 @@
 	helm-recentf-fuzzy-match t
 	helm-autoresize-min-height 20))
 
+(use-package flyspell
+  :straight (:type built-in)
+  :init (flyspell-mode))
+
 (use-package helm-rg
   :straight t
-  :after helm-projectile)
+  :after helm-projectile
+  :init
+ (global-set-key (kbd "C-c p s s") 'helm-rg))
 
 (use-package helm-projectile
   :straight t
@@ -247,12 +266,8 @@
 	projectile-globally-ignored-file-suffixes '("#" "~" ".swp" ".o" ".so" ".pyc" ".jar" "*.class")
 	projectile-globally-ignored-directories '(".git" "node_modules" "__pycache__" ".mypy_cache")
 	projectile-globally-ignored-files '("TAGS" "tags" ".DS_Store" "GTAGS")
-	projectile-mode-line-prefix " - "
-	)
-
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-  (define-key projectile-mode-map (kbd "C-c p s s") 'helm-rg)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+	projectile-mode-line-prefix " - ")
+  (global-set-key (kbd "C-c p") 'projectile-command-map))
 
 ;; Dired extensions and utils
 (use-package dired-sidebar
@@ -302,39 +317,40 @@
 ;; ===============================================
 (use-package php-cs-fixer
   :after php-mode
-  :load-path ("~/.emacs.d/src/php-cs-fix/")
-  )
+  :load-path ("~/.emacs.d/src/php-cs-fix/"))
 
 (use-package lsp-mode
-  :straight t
+  :straight (:type git :repo "emacs-lsp/lsp-mode")
   :config
-  (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil
+        lsp-idle-delay 0.500
+        read-process-output-max (* 1024 1024)
+        gc-cons-threshold 100000000
+        lsp-enable-file-watchers nil
+        lsp-log-io nil
+        lsp-ui-doc-show-with-mouse nil
+        sp-signature-auto-activate nil
+	lsp-ui-doc-position 'at-point
+        lsp-completion-provider :capf)
   (lsp-register-client
    (make-lsp-client
     :new-connection
     (lsp-tcp-server
      (lambda (port)
-       `("php72",         (expand-file-name "~/.config/composer/vendor/felixfbecker/language-server/bin/php-language-server.php"),
+       `("php72", (expand-file-name "~/.config/composer/vendor/felixfbecker/language-server/bin/php-language-server.php"),
          (format "--tcp=localhost:%s" port)"--memory-limit=9095M")))
     :major-modes '(php-mode)
     :server-id 'php-ls))
-  (setq lsp-prefer-flymake nil)
-  (setq lsp-idle-delay 0.500)
-  (setq read-process-output-max (* 1024 1024))
-  (setq gc-cons-threshold 100000000)
-  (setq lsp-enable-file-watchers nil)
-  (setq lsp-log-io nil)
   :hook (php-mode . lsp)
   :commands lsp)
 
 (use-package lsp-ui
-  :straight t
+  :straight (:type git :repo "emacs-lsp/lsp-ui")
   :hook (lsp-mode . lsp-ui-mode)
   :requires lsp-mode flycheck
   :custom
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-position 'bottom)
-  (lsp-ui-doc-delay 5))
+  (setq lsp-ui-doc-enable t
+        lsp-ui-doc-delay 0.500))
 
 (use-package phpunit
   :straight t
