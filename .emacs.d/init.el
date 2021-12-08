@@ -1,3 +1,4 @@
+
 ;;; package ---
 ;;; Commentary:
 ;;; Code:
@@ -149,6 +150,12 @@
   (exwm-randr-enable)
   (exwm-enable)
   :config
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+		(exwm-workspace-rename-buffer exwm-class-name)))
+  (add-hook 'exwm-update-title-hook
+            (lambda ()
+		(exwm-workspace-rename-buffer exwm-title)))
   (defun efs/configure-window-by-class ()
     (interactive)
     (pcase (buffer-name)
@@ -195,14 +202,13 @@
           (call-process
            "xrandr" nil nil nil
            "--output" (match-string 1) "--primary"  "--auto" "--pos" "1920x0" "--rotate" "normal"
-	   "--output" default-output "--auto" "--pos" "0x0" "--rotate" "normal") 
+	   "--output" default-output "--auto" "--pos" "0x0" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
 (use-package async
   :after bytecomp
   :hook ((after-init . async-bytecomp-package-mode)
 	 (dired-mode . dired-async-mode)))
-
 
 (use-package volume
   :config
@@ -215,8 +221,9 @@
   (gcmh-mode 1))
 
 (use-package helm
-  :init (helm-mode)
+  :after emacs
   :straight t
+  :init (helm-mode)
   :bind (("C-x b" . 'helm-mini)
 	 ("C-x f" . 'helm-find-files))
   :config
@@ -291,13 +298,14 @@
 ;; ===============================================
 
 ;; An atom-one-dark theme for smart-mode-line
-(use-package smart-mode-line-atom-one-dark-theme)
+(use-package smart-mode-line-atom-one-dark-theme
+  :straight t)
 
-;; smart-mode-line
 (use-package smart-mode-line
   :straight t
-  :init(smart-mode-line-enable)
+  :init (smart-mode-line-enable)
   :config
+  (add-hook 'exwm-init-hook 'smart-mode-line-enable)
   (setq sml/theme 'atom-one-dark)
   (sml/setup))
 
@@ -394,12 +402,20 @@
             (lambda ()
               (add-hook 'before-save-hook 'php-cs-fixer-before-save)
               (add-hook 'before-save-hook 'delete-trailing-whitespace)))
-  (setq-default show-trailing-whitespace t)
   (setq php-cs-fixer-rules-level-part-options (quote ("@PSR2")))
-  (setq whitespace-style '(face lines-trail))
-  (setq whitespace-line-column 120)
   (setq php-cs-fixer-rules-fixer-part-options
-        (quote("no_multiline_whitespace_before_semicolons" "no_unused_imports" "declare_strict_types" "no_whitespace_before_comma_in_array" "array_indentation" "no_spaces_inside_parenthesis" "multiline_whitespace_before_semicolons" "no_extra_blank_lines" "no_spaces_around_offset" "trim_array_spaces" "whitespace_after_comma_in_array" "binary_operator_spaces"))))
+        (quote("no_multiline_whitespace_before_semicolons"
+              "no_unused_imports"
+               "declare_strict_types"
+               "no_whitespace_before_comma_in_array"
+               "array_indentation"
+               "no_spaces_inside_parenthesis"
+               "multiline_whitespace_before_semicolons"
+               "no_extra_blank_lines"
+               "no_spaces_around_offset"
+               "trim_array_spaces"
+               "whitespace_after_comma_in_array"
+               "binary_operator_spaces"))))
 
 ;; Flycheck to check syntax
 (use-package flycheck
@@ -409,6 +425,43 @@
   (add-hook 'php-mode-hook 'flycheck-mode)
   (setq auto-mode-alist
 	(cons '("\\.el\\'" . flycheck-mode) auto-mode-alist)))
+
+(use-package slack
+  :straight (:type git :host github :repo "yuya373/emacs-slack")
+  :commands (slack-start)
+  :config
+  (slack-register-team
+   :name "i4"
+   :default t
+   :token (auth-source-pick-first-password
+           :host '("i4.slack.com")
+           :user "token" :type 'netrc :max 1)
+   :cookie (auth-source-pick-first-password
+            :host '("i4.slack.com")
+            :user "cookie" :type 'netrc :max 1)
+   :subscribed-channels '((general)))
+  (setq slack-buffer-emojify t)
+  (setq slack-render-image-p t)
+  (setq slack-prefer-current-team t)
+  (setq tracking-max-mode-line-entries 0)
+  (define-key ctl-x-map "j" #'slack-select-rooms)
+  (define-key slack-mode-map "@"
+    (defun endless/slack-message-embed-mention ()
+      (interactive)
+      (call-interactively #'slack-message-embed-mention)
+      (insert " ")))
+  (define-key slack-mode-map (kbd "C-c C-d")
+    #'slack-message-delete)
+  (define-key slack-mode-map (kbd "C-c C-e")
+    #'slack-message-edit)
+  (define-key slack-mode-map (kbd "C-c C-k")
+    #'slack-channel-leave))
+
+(use-package alert
+  :straight (:type git :repo "jwiegley/alert")
+  :commands (alert)
+  :init
+  (setq alert-default-style 'libnotify))
 
 (use-package gnus-notify
   :straight (:type built-in)
@@ -421,6 +474,11 @@
   :straight (:type built-in)
   :init (require 'gnus-notify)
   :config
+  (defadvice gnus-group-get-new-news (around gnus-demon-timeout activate)
+  "Timeout for Gnus."
+  (with-timeout
+      (30 (message "Gnus timed out."))
+    ad-do-it))
   (gnus-demon-add-handler 'gnus-group-get-new-news 1 nil)
   (setq gnus-secondary-select-methods
         '((nnml "local.mail")
@@ -466,78 +524,6 @@
         smtpmail-smtp-service 587
         gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]"))
 
-(use-package slack
-  :after exwm
-  :straight (:type git :host github :repo "yuya373/emacs-slack")
-  :commands (slack-start)
-  :init
-  (setq slack-render-image-p t)
-  (setq tracking-max-mode-line-entries 0)
-  (setq slack-buffer-emojify t)
-  (setq slack-prefer-current-team t)
-  :config
-  (setq slack-completing-read-function
-        #'ido-completing-read)
-  (define-key ctl-x-map "j" #'slack-select-rooms)
-  (define-key slack-mode-map "@"
-    (defun endless/slack-message-embed-mention ()
-      (interactive)
-      (call-interactively #'slack-message-embed-mention)
-      (insert " ")))
-  (define-key slack-mode-map (kbd "C-c C-d")
-    #'slack-message-delete)
-  (define-key slack-mode-map (kbd "C-c C-e")
-    #'slack-message-edit)
-  (define-key slack-mode-map (kbd "C-c C-k")
-    #'slack-channel-leave)
-  (slack-register-team
-   :name "i4"
-   :token (auth-source-pick-first-password
-           :host '("i4.slack.com")
-           :user "token" :type 'netrc :max 1)
-   :cookie (auth-source-pick-first-password
-            :host '("i4.slack.com")
-            :user "cookie" :type 'netrc :max 1)
-   :subscribed-channels '((general))))
-
-(use-package oauth2 :after (slack))
-(use-package request :after (slack))
-(use-package websocket :after (slack))
-(use-package alert
-  :straight (:type git :repo "jwiegley/alert")
-  :commands (alert)
-  :init
-  (setq alert-default-style 'libnotify))
-
-(use-package eaf-browser
-  :straight '(:type git
-              :host github
-              :repo "emacs-eaf/eaf-browser"
-              :files ("*")
-              :pre-build ((start-process-shell-command "" nil  "ln -sf ~/.emacs.d/straight/repos/emacs-application-framework/app/browser/* ~/.emacs.d/straight/build/eaf-browser/")))
-  :config
-  (eaf-bind-key eaf-next-buffer-same-app "C-." eaf-browser-keybinding)
-  (eaf-bind-key eaf-previous-buffer-same-app "C-," eaf-browser-keybinding))
-
-;; Need to run ~/.emacs.d/straight/repos/emacs-application-framework/install-eaf.py
-;; Mannually as it requires sudo passwords to install dependencies
-(use-package eaf
-  :straight '(eaf :type git
-                  :host github
-                  :repo "emacs-eaf/emacs-application-framework"
-                  :files ("*"))
-  :custom
-  (eaf-browser-continue-where-left-off t)
-  (eaf-browser-enable-adblocker t)
-  (eaf-browser-enable-autofill t)
-  (browse-url-browser-function 'eaf-open-browser)
-  :config
-  (setq eaf-browse-blank-page-url "https://duckduckgo.com")
-  (setq eaf-browser-default-search-engine "duckduckgo")
-  (defalias 'browse-web #'eaf-open-browser)
-  (global-set-key (kbd "s-/") 'browse-web)
-  (global-set-key (kbd "s-\\") 'eaf-search-it))
-
 (use-package magit
   :straight (:type git :repo "magit/magit")
   :config
@@ -566,10 +552,7 @@
 ;; ==============================================
 
 ;; General javascript mode
-(use-package js2-mode
-  :straight t
-  :config
-  (add-hook 'php-mode-hook 'whitespace-mode))
+(use-package js2-mode :straight t)
 
 ;; Autocomplete mode for javascript
 (use-package ac-js2
