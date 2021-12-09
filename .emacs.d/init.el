@@ -44,6 +44,13 @@
   :after emacs
   :straight (:type built-in))
 
+(use-package guix
+  :straight t)
+
+(use-package geiser-guile
+  :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode))
+  :straight t)
+
 (use-package emacs
   :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)
