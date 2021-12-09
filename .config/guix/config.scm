@@ -4,21 +4,33 @@
 (use-modules (gnu)
 	     (gnu services)
 	     (gnu services web)
+	     (gnu services databases)
 	     (gnu services shepherd))
 (use-service-modules desktop networking ssh xorg)
+
+(define %wwwuser "nazar")
+(define %wwwgroup "httpd")
+(define %local-php-ini
+  (plain-file "php.ini"
+              "memory_limit = 10G\n
+               max_execution_time = 1800\n
+               display_errors = on "))
 
 (operating-system
  (locale "en_US.utf8")
  (timezone "Europe/Uzhgorod")
  (keyboard-layout (keyboard-layout "us"))
  (host-name "alienware")
+ (hosts-file
+  (plain-file "hosts"
+	      "127.0.0.1 localhost\n127.0.0.1 magentoi4.vg"))
  (users (cons* (user-account
                 (name "nazar")
                 (comment "Nazar")
                 (group "users")
                 (home-directory "/home/nazar")
                 (supplementary-groups
-                 '("wheel" "netdev" "audio" "video")))
+                 '("wheel" "netdev" "audio" "video" "httpd" "php-fpm")))
                %base-user-accounts))
  (packages
   (append
@@ -43,23 +55,55 @@
 		  (httpd-configuration
 		   (config
 		    (httpd-config-file
-		     (server-name "www.example.com")
-		     (document-root "/srv/http/www.example.com")))))
-	 (simple-service 'www.example.com-server httpd-service-type
+		     (user %wwwuser)
+		     (modules (cons*
+			       (httpd-module
+				(name "rewrite_module")
+				(file "modules/mod_rewrite.so"))
+			       (httpd-module
+				(name "proxy_module")
+				(file "modules/mod_proxy.so"))
+			       (httpd-module
+				(name "proxy_fcgi_module")
+                                (file "modules/mod_proxy_fcgi.so"))
+			       (httpd-module
+				(name "proxy_http_module")
+				(file "modules/mod_proxy_http.so"))
+			       %default-httpd-modules))
+		     (extra-config (list "\
+<FilesMatch \\.php$>
+    SetHandler \"proxy:unix:/var/run/php-fpm.sock|fcgi://localhost/\"
+</FilesMatch>"))))))
+	 (service php-fpm-service-type
+		  (php-fpm-configuration
+		   (socket "/var/run/php-fpm.sock")
+		   (user %wwwuser)
+		   (group %wwwgroup)
+		   (socket-user %wwwuser)
+		   (socket-group %wwwgroup)
+		   (display-errors "#t")
+		   (php-ini-file %local-php-ini)))
+	 (simple-service 'magentoi4 httpd-service-type
 			 (list
 			  (httpd-virtualhost
-			   "*:80"
-			   (list (string-join '("ServerName magentoi4.vg"
-						"DocumentRoot /home/nazar/Projects/i4/smith/magento"
-						"<Directory '/home/nazar/Projects/i4/smith/magento'>"
-						"Options -Indexes +FolowSymLinks +MultiViews"
-						"AllowOverride All"
-						"Require all granted"
-						"</Directory>")
-					      "\n")))))
-         (set-xorg-configuration
-          (xorg-configuration
-           (keyboard-layout keyboard-layout))))
+			   "magentoi4.vg"
+			   (list
+			    (string-join
+			     '("ServerName magentoi4.vg"
+			       "ServerAlias magentoi4.vg"
+			       "DocumentRoot /home/nazar/Projects/i4/smith/magento"
+			       "<Directory /home/nazar/Projects/i4/smith/magento>"
+			       "Options -Indexes +FollowSymLinks +MultiViews"
+			       "AllowOverride All"
+			       "Require all granted"
+			       "</Directory>")
+			     "\n")))))
+	 (service mysql-service-type
+		  (mysql-configuration
+		   (auto-upgrade? "#t")))
+	 (set-xorg-configuration
+	  (xorg-configuration
+	   (keyboard-layout keyboard-layout))))
    %desktop-services))
  (bootloader
   (bootloader-configuration

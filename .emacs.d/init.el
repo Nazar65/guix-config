@@ -163,13 +163,8 @@
       ("DuckDuckGo — Privacy, simplified." (exwm-workspace-move 2 0))))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
-    (eshell)
-    (eaf-open "http://duckduckgo.com" "browser")
-    (run-at-time "1 sec" nil (lambda ()
-                               (kill-buffer "duckduckgo.com")
-                               (exwm-workspace-switch-create 2)
-                               (eaf-open-browser "http://duckduckgo.com"))))
-
+    (eshell))
+  
   (setq exwm-input-global-keys
         `(([?\s-r] . exwm-reset)
           ([s-left] . windmove-left)
