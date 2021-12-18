@@ -48,7 +48,8 @@
   :straight t)
 
 (use-package geiser-guile
-  :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode))
+  :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode)
+	 ("\\.[Ss][Cc][Mm]\\'" . scheme-mode))
   :straight t)
 
 (use-package emacs
