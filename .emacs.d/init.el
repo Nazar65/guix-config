@@ -44,16 +44,7 @@
   :after emacs
   :straight (:type built-in))
 
-(use-package guix
-  :straight t)
-
-(use-package geiser-guile
-  :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode)
-	 ("\\.[Ss][Cc][Mm]\\'" . scheme-mode))
-  :straight t)
-
 (use-package emacs
-  :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)
          ("M-b"     . 'backward-to-word)
          ("C-!"     . 'kill-this-buffer)
@@ -145,18 +136,20 @@
   (setq custom-file (expand-file-name "~/.emacs.d/custom.el" user-emacs-directory))
   (when (file-exists-p custom-file)
     (load custom-file)))
-
+ 
 (use-package exwm
   :after emacs
   :init
+  (require 'exwm)
+  (require 'exwm-randr)
+  (require 'exwm-systemtray)
+  (exwm-enable)
   (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
   (add-hook 'exwm-init-hook #'efs/exwm-init-hook)
   (add-hook 'exwm-randr-screen-change-hook #'efs/exwm-change-screen-hook)
-  (require 'exwm-randr)
-  (require 'exwm-systemtray)
   (exwm-systemtray-enable)
   (exwm-randr-enable)
-  (exwm-enable)
+  (set-face-attribute 'default nil :height 68)
   :config
   (add-hook 'exwm-update-class-hook
             (lambda ()
@@ -167,8 +160,8 @@
   (defun efs/configure-window-by-class ()
     (interactive)
     (pcase (buffer-name)
-      ("*eshell*" (exwm-workspace-move 1))
-      ("DuckDuckGo — Privacy, simplified." (exwm-workspace-move 2 0))))
+      ("*eshell*" (exwm-workspace-move 1))))
+  
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (eshell))
