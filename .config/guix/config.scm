@@ -5,6 +5,11 @@
  (gnu services pm)
  (gnu services web)
  (gnu services mcron)
+ (guix)
+ (guix utils)
+ (guix packages)
+ (gnu packages php)
+ (gnu services sound)
  (gnu packages autotools)
  (gnu services databases)
  (gnu services shepherd))
@@ -17,6 +22,8 @@
 	      "memory_limit = 10G\n
                max_execution_time = 1800\n
                display_errors = on "))
+(define %php-socket-path
+  (string-append "/var/run/php" (version-major (package-version php)) "-fpm.sock"))
 
 (define %my-desktop-services
   (modify-services
@@ -26,6 +33,7 @@
 			  (inherit config)
 			  (handle-power-key 'suspend)
 			  (handle-lid-switch-external-power 'suspend)))))
+
 (operating-system
  (locale "en_US.utf8")
  (timezone "Europe/Uzhgorod")
@@ -57,8 +65,12 @@
     (specification->package "stow")
     (specification->package "httpd")
     (specification->package "mysql")
-    (specification->package "php")
+    (specification->package "file")
+    (specification->package "setxkbmap")
+    (specification->package "ungoogled-chromium")
+    (specification->package "php72")
     (specification->package "openssh")
+    (specification->package "alsa-utils")
     (specification->package
      "emacs-desktop-environment")
     (specification->package "nss-certs"))
@@ -77,7 +89,7 @@
 		  (httpd-module
 		   (name "rewrite_module")
 		   (file "modules/mod_rewrite.so"))
-		  (httpd-module
+		   (httpd-module
 		   (name "proxy_module")
 		   (file "modules/mod_proxy.so"))
 		  (httpd-module
@@ -90,11 +102,11 @@
 		(extra-config
 		 (list "\
 <FilesMatch \\.php$>
-    SetHandler \"proxy:unix:/var/run/php-fpm.sock|fcgi://localhost/\"
+    SetHandler \"proxy:unix:"%php-socket-path"|fcgi://localhost/\"
 </FilesMatch>"))))))
     (service php-fpm-service-type
 	     (php-fpm-configuration
-	      (socket "/var/run/php-fpm.sock")
+	      (socket %php-socket-path)
 	      (user %wwwuser)
 	      (group %wwwgroup)
 	      (socket-user %wwwuser)
@@ -119,7 +131,6 @@
     (service mysql-service-type
 	     (mysql-configuration
 	      (auto-upgrade? "#f")))
-    
     (service tlp-service-type
 	     (tlp-configuration
 	      (tlp-default-mode "BAT")
@@ -130,11 +141,13 @@
               (usb-autosuspend? #t)
 	      (cpu-scaling-governor-on-ac (list "performance"))
 	      (sched-powersave-on-bat? #t)))
-    
+
+
     (set-xorg-configuration
      (xorg-configuration
       (keyboard-layout keyboard-layout))))
    %my-desktop-services))
+ (kernel-arguments '("snd_hda_intel.dmic_detect=0"))
  (bootloader
     (bootloader-configuration
       (bootloader grub-efi-bootloader)
