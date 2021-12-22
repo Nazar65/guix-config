@@ -13,7 +13,7 @@
  (gnu packages autotools)
  (gnu services databases)
  (gnu services shepherd))
-(use-service-modules base desktop networking  xorg)
+(use-service-modules base dbus desktop networking  xorg)
 
 (define %wwwuser "nazar")
 (define %wwwgroup "httpd")
@@ -42,7 +42,11 @@
  (host-name "alienware")
  (hosts-file
   (plain-file "hosts"
-	      "127.0.0.1 localhost\n127.0.0.1 magentoi4.vg"))
+	      (string-join
+	       '("127.0.0.1 localhost"
+		 "127.0.0.1 magentoi4.vg"
+		 "127.0.0.1 second.magentoi4.vg"
+		 ) "\n")))
  (users
   (cons*
    (user-account
@@ -58,15 +62,21 @@
    (list
     (specification->package "emacs")
     (specification->package "emacs-exwm")
+    (specification->package "libnotify")
     (specification->package "xrandr")
     (specification->package "ripgrep")
     (specification->package "icecat")
     (specification->package "git")
+    (specification->package "ispell")
     (specification->package "stow")
+    (specification->package "node")
+    (specification->package "w3m")
     (specification->package "httpd")
     (specification->package "mysql")
+    (specification->package "scrot")
     (specification->package "file")
-    (specification->package "setxkbmap")
+    (specification->package "rsync")
+    (specification->package "notification-daemon")
     (specification->package "ungoogled-chromium")
     (specification->package "php72")
     (specification->package "openssh")
@@ -123,14 +133,31 @@
 			  "ServerAlias magentoi4.vg"
 			  "DocumentRoot /home/nazar/Projects/i4/smith/magento"
 			  "<Directory /home/nazar/Projects/i4/smith/magento>"
-			  "Options -Indexes +FollowSymLinks +MultiViews"
-			  "AllowOverride All"
-			  "Require all granted"
+			  "    Options -Indexes +FollowSymLinks +MultiViews"
+			  "    AllowOverride All"
+			  "    Require all granted"
 			  "</Directory>")
+			"\n")))
+		     (httpd-virtualhost
+		      "second.magentoi4.vg"
+		      (list
+		       (string-join
+			'("ServerName second.magentoi4.vg"
+			  "ServerAlias second.magentoi4.vg"
+			  "DocumentRoot /home/nazar/Projects/i4/smith/magento"
+			  "<Directory /home/nazar/Projects/i4/smith/magento>"
+			  "    Options -Indexes +FollowSymLinks +MultiViews"
+			  "    AllowOverride All"
+			  "    Require all granted"
+			  "</Directory>"
+			  "SetEnv MAGE_RUN_CODE \"ES\""
+                          "SetEnv MAGE_RUN_TYPE \"website\"")
 			"\n")))))
+
     (service mysql-service-type
 	     (mysql-configuration
 	      (auto-upgrade? "#f")))
+
     (service tlp-service-type
 	     (tlp-configuration
 	      (tlp-default-mode "BAT")
@@ -141,7 +168,6 @@
               (usb-autosuspend? #t)
 	      (cpu-scaling-governor-on-ac (list "performance"))
 	      (sched-powersave-on-bat? #t)))
-
 
     (set-xorg-configuration
      (xorg-configuration

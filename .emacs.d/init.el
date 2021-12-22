@@ -136,7 +136,7 @@
   (setq custom-file (expand-file-name "~/.emacs.d/custom.el" user-emacs-directory))
   (when (file-exists-p custom-file)
     (load custom-file)))
- 
+
 (use-package exwm
   :after emacs
   :init
@@ -161,11 +161,11 @@
     (interactive)
     (pcase (buffer-name)
       ("*eshell*" (exwm-workspace-move 1))))
-  
+
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (eshell))
-  
+
   (setq exwm-input-global-keys
         `(([?\s-r] . exwm-reset)
           ([s-left] . windmove-left)
@@ -332,19 +332,11 @@
         gc-cons-threshold 100000000
         lsp-enable-file-watchers nil
         lsp-log-io nil
+	lsp-ui-doc-show-with-cursor t
         lsp-ui-doc-show-with-mouse nil
         sp-signature-auto-activate nil
 	lsp-ui-doc-position 'at-point
         lsp-completion-provider :capf)
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection
-    (lsp-tcp-server
-     (lambda (port)
-       `("php72", (expand-file-name "~/.config/composer/vendor/felixfbecker/language-server/bin/php-language-server.php"),
-         (format "--tcp=localhost:%s" port)"--memory-limit=9095M")))
-    :major-modes '(php-mode)
-    :server-id 'php-ls))
   :hook (php-mode . lsp)
   :commands lsp)
 
@@ -430,10 +422,10 @@
    :name "i4"
    :default t
    :token (auth-source-pick-first-password
-           :host '("i4.slack.com")
+           :host "i4.slack.com"
            :user "token" :type 'netrc :max 1)
    :cookie (auth-source-pick-first-password
-            :host '("i4.slack.com")
+            :host "i4.slack.com"
             :user "cookie" :type 'netrc :max 1)
    :subscribed-channels '((general)))
   (setq slack-buffer-emojify t)
