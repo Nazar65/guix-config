@@ -197,8 +197,8 @@
 	    (call-process "xrandr" nil nil nil "--output" default-output "--auto")
           (call-process
            "xrandr" nil nil nil
-           "--output" (match-string 1) "--primary"  "--auto" "--pos" "1920x0" "--rotate" "normal"
-	   "--output" default-output "--auto" "--pos" "0x0" "--rotate" "normal")
+           "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
+	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
 (use-package async

@@ -9,6 +9,7 @@
  (guix utils)
  (guix packages)
  (gnu packages php)
+ (packages php72)
  (gnu services sound)
  (gnu packages autotools)
  (gnu services databases)
@@ -116,6 +117,7 @@
 </FilesMatch>"))))))
     (service php-fpm-service-type
 	     (php-fpm-configuration
+	      (php php72)
 	      (socket %php-socket-path)
 	      (user %wwwuser)
 	      (group %wwwgroup)
