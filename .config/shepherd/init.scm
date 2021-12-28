@@ -1,13 +1,13 @@
-(use-modules (shepherd service)
-             ((ice-9 ftw) #:select (scandir)))
+(use-modules (shepherd service))
 
-;; Load all the files in the directory 'init.d' with a suffix '.scm'.
-(for-each
-  (lambda (file)
-    (load (string-append "init.d/" file)))
-  (scandir (string-append (dirname (current-filename)) "/init.d")
-           (lambda (file)
-             (string-suffix? ".scm" file))))
+(define notification-daemon
+  (make <service>
+    #:provides '(notification-daemon)
+    #:docstring "Run notification-daemon"
+    #:start (make-forkexec-constructor '("/home/nazar/.guix-profile/libexec/notification-daemon"))
+    #:stop (make-kill-destructor)
+    #:respawn? #t))
 
-;; Send shepherd into the background
-(action 'shepherd 'daemonize)
+(register-services notification-daemon)
+
+(for-each start '(notification-daemon))

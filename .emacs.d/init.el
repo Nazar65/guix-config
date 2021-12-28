@@ -177,6 +177,7 @@
 
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
+    (start-process-shell-command "" nil  "shepherd")
     (eshell))
 
   (setq exwm-input-global-keys
@@ -460,7 +461,7 @@
 (use-package alert
   :straight (:type git :repo "jwiegley/alert")
   :commands (alert)
-  :init
+  :config
   (setq alert-default-style 'libnotify))
 
 (use-package gnus-notify
