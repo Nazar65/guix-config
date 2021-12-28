@@ -23,6 +23,7 @@
 	      "memory_limit = 10G\n
                max_execution_time = 1800\n
                display_errors = on "))
+
 (define %php-socket-path
   (string-append "/var/run/php" (version-major (package-version php)) "-fpm.sock"))
 
@@ -64,14 +65,18 @@
     (specification->package "emacs")
     (specification->package "emacs-exwm")
     (specification->package "libnotify")
+    (specification->package "brightnessctl")
     (specification->package "xrandr")
     (specification->package "ripgrep")
     (specification->package "icecat")
+    (specification->package "playerctl")
     (specification->package "git")
     (specification->package "ispell")
     (specification->package "stow")
     (specification->package "node")
     (specification->package "w3m")
+    (specification->package "curl")
+    (specification->package "git")
     (specification->package "httpd")
     (specification->package "mysql")
     (specification->package "scrot")

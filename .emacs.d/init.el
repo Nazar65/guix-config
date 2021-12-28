@@ -44,6 +44,12 @@
   :after emacs
   :straight (:type built-in))
 
+(use-package desktop-environment
+  :straight (:type git :host github :repo "DamienCassou/desktop-environment")
+  :after exwm
+  :init
+  (desktop-environment-mode))
+
 (use-package emacs
   :bind (("M-f"     . 'forward-to-word)
          ("M-b"     . 'backward-to-word)
@@ -82,6 +88,7 @@
   (setq password-cache t)
   (setq password-cache-expiry 3600)
   (setq nxml-child-indent 4 nxml-attribute-indent 4)
+  (setq desktop-path '("~/.emacs.d/" "~" "."))
   (global-unset-key "\C-z")
   (global-set-key (kbd "C-x p") #'proced)
   (global-set-key "\C-z" 'advertised-undo))
@@ -137,6 +144,13 @@
   (when (file-exists-p custom-file)
     (load custom-file)))
 
+(use-package guix
+  :straight t)
+
+(use-package geiser-guile
+  :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode))
+  :straight t)
+
 (use-package exwm
   :after emacs
   :init
@@ -149,7 +163,6 @@
   (add-hook 'exwm-randr-screen-change-hook #'efs/exwm-change-screen-hook)
   (exwm-systemtray-enable)
   (exwm-randr-enable)
-  (set-face-attribute 'default nil :height 68)
   :config
   (add-hook 'exwm-update-class-hook
             (lambda ()
@@ -168,6 +181,12 @@
 
   (setq exwm-input-global-keys
         `(([?\s-r] . exwm-reset)
+          ([s-print] . desktop-environment-screenshot-part)
+          ([s-escape] . desktop-environment-lock-screen)
+          ([XF86MonBrightnessDown] . desktop-environment-brightness-decrement)
+          ([XF86MonBrightnessUp] . desktop-environment-brightness-increment)
+          ([XF86AudioRaiseVolume] . desktop-environment-volume-increment)
+          ([XF86AudioLowerVolume] . desktop-environment-volume-decrement)
           ([s-left] . windmove-left)
           ([s-right] . windmove-right)
           ([s-up] . windmove-up)
@@ -206,12 +225,6 @@
   :hook ((after-init . async-bytecomp-package-mode)
 	 (dired-mode . dired-async-mode)))
 
-(use-package volume
-  :config
-  (global-set-key (kbd "<XF86AudioRaiseVolume>") 'volume-raise-10)
-  (global-set-key (kbd "<XF86AudioLowerVolume>") 'volume-lower-10)
-  (global-set-key (kbd "<XF86AudioMute>") 'volume-set-to-0%))
-
 (use-package gcmh
   :init
   (gcmh-mode 1))
@@ -224,6 +237,7 @@
 	 ("C-x f" . 'helm-find-files))
   :config
   (require 'helm-config)
+
   (define-key global-map [remap find-file] 'helm-find-files)
   (define-key global-map [remap occur] 'helm-occur)
   (define-key global-map [remap list-buffers] 'helm-buffers-list)
@@ -247,9 +261,7 @@
 
 (use-package helm-rg
   :straight t
-  :after helm-projectile
-  :init
- (global-set-key (kbd "C-c p s s") 'helm-rg))
+  :after helm-projectile)
 
 (use-package helm-projectile
   :straight t
