@@ -9,6 +9,7 @@
  (guix packages)
  (gnu packages php)
  (packages php72)
+ (packages composer)
  (gnu services sound)
  (gnu packages autotools)
  (gnu services databases)
@@ -17,12 +18,7 @@
 
 (define %wwwuser "nazar")
 (define %wwwgroup "httpd")
-(define %local-php-ini
-  (plain-file "php.ini"
-	      "memory_limit = 10G\n
-               max_execution_time = 1800\n
-               display_errors = on "))
-
+(define %local-php-ini "/home/nazar/.config/php/php.ini")
 (define %php-socket-path
   (string-append "/var/run/php"
 		 (version-major
@@ -85,9 +81,12 @@
      (specification->package "scrot")
      (specification->package "file")
      (specification->package "rsync")
+     (specification->package "autoconf")
      (specification->package "notification-daemon")
      (specification->package "ungoogled-chromium")
      (specification->package "php72")
+     (specification->package "php72-xdebug")
+     (specification->package "composer")
      (specification->package "openssh")
      (specification->package "alsa-utils")
      (specification->package
@@ -166,7 +165,7 @@
      (service mysql-service-type
 	      (mysql-configuration
 	       (auto-upgrade? "#f")))
-     
+
      (service tlp-service-type
 	      (tlp-configuration
 	       (tlp-default-mode "BAT")

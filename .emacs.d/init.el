@@ -332,9 +332,25 @@
 
 ;; PHP settings
 ;; ===============================================
+
 (use-package php-cs-fixer
+  :straight (:type git :repo "OVYA/php-cs-fixer")
   :after php-mode
-  :load-path ("~/.emacs.d/src/php-cs-fix/"))
+  :config
+  (setq php-cs-fixer-rules-level-part-options (quote ("@PSR2")))
+  (setq php-cs-fixer-rules-fixer-part-options
+        (quote("no_multiline_whitespace_before_semicolons"
+              "no_unused_imports"
+               "declare_strict_types"
+               "no_whitespace_before_comma_in_array"
+               "array_indentation"
+               "no_spaces_inside_parenthesis"
+               "multiline_whitespace_before_semicolons"
+               "no_extra_blank_lines"
+               "no_spaces_around_offset"
+               "trim_array_spaces"
+               "whitespace_after_comma_in_array"
+               "binary_operator_spaces"))))
 
 (use-package lsp-mode
   :straight (:type git :repo "emacs-lsp/lsp-mode")
@@ -402,21 +418,7 @@
   (add-hook 'php-mode-hook
             (lambda ()
               (add-hook 'before-save-hook 'php-cs-fixer-before-save)
-              (add-hook 'before-save-hook 'delete-trailing-whitespace)))
-  (setq php-cs-fixer-rules-level-part-options (quote ("@PSR2")))
-  (setq php-cs-fixer-rules-fixer-part-options
-        (quote("no_multiline_whitespace_before_semicolons"
-              "no_unused_imports"
-               "declare_strict_types"
-               "no_whitespace_before_comma_in_array"
-               "array_indentation"
-               "no_spaces_inside_parenthesis"
-               "multiline_whitespace_before_semicolons"
-               "no_extra_blank_lines"
-               "no_spaces_around_offset"
-               "trim_array_spaces"
-               "whitespace_after_comma_in_array"
-               "binary_operator_spaces"))))
+              (add-hook 'before-save-hook 'delete-trailing-whitespace))))
 
 ;; Flycheck to check syntax
 (use-package flycheck
