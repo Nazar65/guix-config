@@ -89,8 +89,7 @@
      (specification->package "composer")
      (specification->package "openssh")
      (specification->package "alsa-utils")
-     (specification->package
-      "emacs-desktop-environment")
+     (specification->package "emacs-desktop-environment")
      (specification->package "nss-certs"))
     %base-packages))
   (services
