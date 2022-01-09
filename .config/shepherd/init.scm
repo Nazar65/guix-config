@@ -8,6 +8,24 @@
     #:stop (make-kill-destructor)
     #:respawn? #t))
 
-(register-services notification-daemon)
+(define pulseaudio-daemon
+  (make <service>
+    #:provides '(pulseaudio-daemon)
+    #:docstring "Run pulseaudio-daemon"
+    #:start (make-forkexec-constructor '("pulseaudio" "-D"))
+    #:stop (make-kill-destructor)
+    #:respawn? #t))
 
-(for-each start '(notification-daemon))
+(define pulseaudio-equalizer
+  (make <service>
+    #:provides '(pulseaudio-equalizer)
+    #:docstring "Enable pulseaudio-equalizer"
+    #:start (make-forkexec-constructor '("pulseaudio-equalizer" "enable"))
+    #:stop (make-kill-destructor)
+    #:respawn? #t))
+
+(register-services notification-daemon)
+(register-services pulseaudio-daemon)
+(register-services pulseaudio-equalizer)
+
+(for-each start '(notification-daemon pulseaudio-daemon pulseaudio-equalizer))

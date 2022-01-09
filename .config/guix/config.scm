@@ -7,6 +7,8 @@
  (guix)
  (guix utils)
  (guix packages)
+ (gnu packages audio)
+ (gnu packages pulseaudio)
  (gnu packages php)
  (packages php72)
  (packages composer)
@@ -164,7 +166,10 @@
      (service mysql-service-type
 	      (mysql-configuration
 	       (auto-upgrade? "#f")))
-
+     
+     (service ladspa-service-type
+              (ladspa-configuration (plugins (list swh-plugins))))
+     
      (service tlp-service-type
 	      (tlp-configuration
 	       (tlp-default-mode "BAT")
