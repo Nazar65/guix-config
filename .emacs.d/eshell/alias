@@ -1,1 +1,1 @@
-alias php php -c ~/.config/php/php.ini $1
+alias php php -c ~/.config/php/php.ini $*
