@@ -23,7 +23,7 @@
 (define %php-socket-path
   (string-append "/var/run/php"
 		 (version-major
-		  (package-version php))
+		  (package-version php72))
 		 "-fpm.sock"))
 
 (define %my-desktop-services
@@ -81,11 +81,14 @@
      (specification->package "mysql")
      (specification->package "scrot")
      (specification->package "file")
+     (specification->package "ly")
+     (specification->package "pulseaudio-equalizer")
      (specification->package "rsync")
      (specification->package "autoconf")
      (specification->package "notification-daemon")
      (specification->package "ungoogled-chromium")
      (specification->package "php72")
+     (specification->package "phpfixer")
      (specification->package "php72-xdebug")
      (specification->package "composer")
      (specification->package "openssh")
@@ -165,10 +168,10 @@
      (service mysql-service-type
 	      (mysql-configuration
 	       (auto-upgrade? "#f")))
-     
+
      (service ladspa-service-type
               (ladspa-configuration (plugins (list swh-plugins))))
-     
+
      (service tlp-service-type
 	      (tlp-configuration
 	       (tlp-default-mode "BAT")

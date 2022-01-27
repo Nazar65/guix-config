@@ -1,4 +1,3 @@
-
 ;;; package ---
 ;;; Commentary:
 ;;; Code:
@@ -50,6 +49,13 @@
   :init
   (desktop-environment-mode))
 
+(use-package restclient
+  :straight (:type git :host github :repo "pashky/restclient.el"))
+
+(use-package company-restclient
+  :straight (:type git :host github :repo "iquiw/company-restclient")
+  :config (add-to-list 'company-backends 'company-restclient))
+
 (use-package emacs
   :bind (("M-f"     . 'forward-to-word)
          ("M-b"     . 'backward-to-word)
@@ -72,13 +78,13 @@
   :custom
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
   (setq file-name-handler-alist nil)
+  (setq indent-tabs-mode nil)
   (nsm-settings-file "~/.emacs.d/network-security.data")
   (history-delete-duplicates t)
   (display-time-default-load-average nil)
   (history-length 600)
   (put 'dired-find-alternate-file 'disabled nil)
   :config
-  (setq indent-tabs-mode nil)
   (setq display-time-mail-string "")
   (setq display-time-day-and-date t)
   (setq display-time-24hr-format t)
@@ -430,7 +436,7 @@
 	(cons '("\\.el\\'" . flycheck-mode) auto-mode-alist)))
 
 (use-package slack
-  :straight (:type git :host github :repo "yuya373/emacs-slack")
+  :straight (:type git :host github :repo "isamert/emacs-slack" :branch "fix-curl-downloader")
   :commands (slack-start)
   :config
   (slack-register-team
