@@ -3,37 +3,43 @@
  (guix)
  (guix utils)
  (guix packages)
- (packages php72)
  (packages composer)
+ (packages php74)
  (gnu packages audio)
  (gnu packages pulseaudio)
  (gnu packages autotools)
+ (gnu packages admin)
+ (gnu packages mail)
  (gnu services)
  (gnu services pm)
  (gnu services web)
  (gnu services mcron)
+ (gnu system setuid)
  (gnu services sound)
  (gnu services databases)
+ (gnu services mail)
  (gnu services shepherd))
 (use-service-modules base dbus desktop networking  xorg)
 
+(define %php-version "php74")
 (define %wwwuser "nazar")
 (define %wwwgroup "httpd")
 (define %local-php-ini "/home/nazar/.config/php/php.ini")
 (define %php-socket-path
   (string-append "/var/run/php"
 		 (version-major
-		  (package-version php72))
+		  (package-version php74))
 		 "-fpm.sock"))
 
 (define %my-desktop-services
   (modify-services
       %desktop-services
-    (elogind-service-type config =>
-			  (elogind-configuration
-			   (inherit config)
-			   (handle-power-key 'suspend)
-			   (handle-lid-switch-external-power 'suspend)))))
+    (elogind-service-type
+     config =>
+     (elogind-configuration
+      (inherit config)
+      (handle-power-key 'suspend)
+      (handle-lid-switch-external-power 'suspend)))))
 
 (operating-system
   (locale "en_US.utf8")
@@ -42,13 +48,15 @@
    (keyboard-layout "us,ua,ru"))
   (host-name "alienware")
   (hosts-file
-   (plain-file "hosts"
-	       (string-join
-		'("127.0.0.1 localhost"
-		  "127.0.0.1 magentoi4.vg"
-		  "127.0.0.1 second.magentoi4.vg"
-		  )
-		"\n")))
+   (plain-file
+    "hosts"
+    (string-join
+     '("127.0.0.1 localhost"
+       "127.0.0.1 magentoi4.vg"
+       "127.0.0.1 second.magentoi4.vg"
+       )
+     "\n")))
+  (groups (cons (user-group (name "openvpn")) %base-groups))
   (users
    (cons*
     (user-account
@@ -58,7 +66,29 @@
      (home-directory "/home/nazar")
      (supplementary-groups
       '("wheel" "netdev" "audio" "video" "httpd" "php-fpm")))
+    (user-account
+     (name "openvpn")
+     (group "openvpn")
+     (system? #t)
+     (comment "openvpn user")
+     (home-directory "/var/empty")
+     (shell (file-append shadow "/sbin/nologin")))
     %base-user-accounts))
+  (setuid-programs
+   (append
+    (list (setuid-program
+           (program (file-append opensmtpd "/sbin/smtpctl"))
+	   (setuid? #f)
+	   (setgid? #t)
+	   (user "root")
+	   (group "smtpq"))
+	  (setuid-program
+           (program (file-append opensmtpd "/sbin/sendmail"))
+	   (setuid? #f)
+	   (setgid? #t)
+	   (user "root")
+	   (group "smtpq")))
+    %setuid-programs))
   (packages
    (append
     (list
@@ -74,6 +104,7 @@
      (specification->package "ispell")
      (specification->package "stow")
      (specification->package "node")
+     (specification->package "sendmail")
      (specification->package "w3m")
      (specification->package "curl")
      (specification->package "git")
@@ -82,16 +113,19 @@
      (specification->package "scrot")
      (specification->package "file")
      (specification->package "ly")
+     (specification->package "opensmtpd")
      (specification->package "pulseaudio-equalizer")
      (specification->package "rsync")
      (specification->package "autoconf")
      (specification->package "notification-daemon")
      (specification->package "ungoogled-chromium")
-     (specification->package "php72")
+     (specification->package "php74")
+     (specification->package "elasticsearch")
      (specification->package "phpfixer")
-     (specification->package "php72-xdebug")
+     (specification->package "xdebug3")
      (specification->package "composer")
      (specification->package "openssh")
+     (specification->package "redis")
      (specification->package "alsa-utils")
      (specification->package "emacs-desktop-environment")
      (specification->package "nss-certs"))
@@ -100,6 +134,7 @@
    (append
     (list
      (service tor-service-type)
+     (service redis-service-type)
      (service httpd-service-type
 	      (httpd-configuration
 	       (config
@@ -127,7 +162,7 @@
 </FilesMatch>"))))))
      (service php-fpm-service-type
 	      (php-fpm-configuration
-	       (php php72)
+	       (php php74)
 	       (socket %php-socket-path)
 	       (user %wwwuser)
 	       (group %wwwgroup)
@@ -135,7 +170,8 @@
 	       (socket-group %wwwgroup)
 	       (display-errors "#t")
 	       (php-ini-file %local-php-ini)))
-     (simple-service 'magentoi4 httpd-service-type
+     (simple-service
+      'magentoi4 httpd-service-type
 		     (list
 		      (httpd-virtualhost
 		       "magentoi4.vg"
@@ -143,31 +179,21 @@
 			(string-join
 			 '("ServerName magentoi4.vg"
 			   "ServerAlias magentoi4.vg"
-			   "DocumentRoot /home/nazar/Projects/i4/smith/magento"
-			   "<Directory /home/nazar/Projects/i4/smith/magento>"
+			   "DocumentRoot /home/nazar/srv/pub"
+			   "<Directory /home/nazar/srv>"
 			   "    Options -Indexes +FollowSymLinks +MultiViews"
 			   "    AllowOverride All"
 			   "    Require all granted"
 			   "</Directory>")
-			 "\n")))
-		      (httpd-virtualhost
-		       "second.magentoi4.vg"
-		       (list
-			(string-join
-			 '("ServerName second.magentoi4.vg"
-			   "ServerAlias second.magentoi4.vg"
-			   "DocumentRoot /home/nazar/Projects/i4/smith/magento"
-			   "<Directory /home/nazar/Projects/i4/smith/magento>"
-			   "    Options -Indexes +FollowSymLinks +MultiViews"
-			   "    AllowOverride All"
-			   "    Require all granted"
-			   "</Directory>"
-			   "SetEnv MAGE_RUN_CODE \"ES\""
-                           "SetEnv MAGE_RUN_TYPE \"website\"")
 			 "\n")))))
+
      (service mysql-service-type
 	      (mysql-configuration
 	       (auto-upgrade? "#f")))
+
+     (service opensmtpd-service-type
+              (opensmtpd-configuration
+               (config-file (local-file "my-smtpd.conf"))))
 
      (service ladspa-service-type
               (ladspa-configuration (plugins (list swh-plugins))))
