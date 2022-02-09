@@ -21,7 +21,6 @@
  (gnu services shepherd))
 (use-service-modules base dbus desktop networking  xorg)
 
-(define %php-version "php74")
 (define %wwwuser "nazar")
 (define %wwwgroup "httpd")
 (define %local-php-ini "/home/nazar/.config/php/php.ini")
@@ -45,16 +44,14 @@
   (locale "en_US.utf8")
   (timezone "Europe/Uzhgorod")
   (keyboard-layout
-   (keyboard-layout "us,ua,ru"))
+   (keyboard-layout "us,ua,ru" #:options '("grp:alt_shift_toggle")))
   (host-name "alienware")
   (hosts-file
    (plain-file
     "hosts"
     (string-join
      '("127.0.0.1 localhost"
-       "127.0.0.1 magentoi4.vg"
-       "127.0.0.1 second.magentoi4.vg"
-       )
+       "127.0.0.1 alienware.ai")
      "\n")))
   (groups (cons (user-group (name "openvpn")) %base-groups))
   (users
@@ -114,6 +111,7 @@
      (specification->package "file")
      (specification->package "ly")
      (specification->package "opensmtpd")
+     (specification->package "setxkbmap")
      (specification->package "pulseaudio-equalizer")
      (specification->package "rsync")
      (specification->package "autoconf")
@@ -172,20 +170,20 @@
 	       (php-ini-file %local-php-ini)))
      (simple-service
       'magentoi4 httpd-service-type
-		     (list
-		      (httpd-virtualhost
-		       "magentoi4.vg"
-		       (list
-			(string-join
-			 '("ServerName magentoi4.vg"
-			   "ServerAlias magentoi4.vg"
-			   "DocumentRoot /home/nazar/srv/pub"
-			   "<Directory /home/nazar/srv>"
-			   "    Options -Indexes +FollowSymLinks +MultiViews"
-			   "    AllowOverride All"
-			   "    Require all granted"
-			   "</Directory>")
-			 "\n")))))
+      (list
+       (httpd-virtualhost
+	"alienware.ai"
+	(list
+	 (string-join
+	  '("ServerName alienware.ai"
+	    "ServerAlias alienware.ai"
+	    "DocumentRoot /home/nazar/srv/pub"
+	    "<Directory /home/nazar/srv>"
+	    "    Options -Indexes +FollowSymLinks +MultiViews"
+	    "    AllowOverride All"
+	    "    Require all granted"
+	    "</Directory>")
+	  "\n")))))
 
      (service mysql-service-type
 	      (mysql-configuration
@@ -211,6 +209,16 @@
 	       (sched-powersave-on-bat? #t)))
      (set-xorg-configuration
       (xorg-configuration
+       (extra-config (list (string-join
+	  '("Section \"InputClass\""
+            "Identifier \"touchpad\""
+            "Driver \"libinput\""
+            "MatchIsTouchpad \"on\""
+            "Option \"DisableWhileTyping\" \"on\""
+            "Option \"Tapping\" \"1\""
+            "Option \"NaturalScrolling\" \"1\""
+            "Option \"Emulate3Buttons\" \"yes\""
+            "EndSection") "\n")))
        (keyboard-layout keyboard-layout))))
     %my-desktop-services))
   (kernel-arguments
