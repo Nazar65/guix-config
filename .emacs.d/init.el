@@ -338,6 +338,19 @@
 
 ;; PHP settings
 ;; ===============================================
+(use-package yasnippet
+  :straight (:type git :host github :repo "joaotavora/yasnippet")
+  :config (yas-global-mode))
+
+(use-package yasnippets
+  :straight (:type git :host github :repo "AndreaCrotti/yasnippet-snippets")
+  :config
+  (add-hook 'php-mode-hook #'yas-minor-mode))
+
+(use-package php-doc-block
+  :straight (:type git :host github :repo "moskalyovd/emacs-php-doc-block")
+  :config
+  (define-key php-mode-map (kbd "<C-tab>") 'php-doc-block))
 
 (use-package php-cs-fixer
   :straight (:type git :repo "Nazar65/emacs-php-cs-fixer")
@@ -532,24 +545,15 @@
   (setq auto-mode-alist
 	(cons '("\\.css\\'" . css-mode) auto-mode-alist)))
 
-;; Sort css attributes
-(use-package com-css-sort
-  :straight t
-  :after css-mode
-  :config
-  (setq com-css-sort-sort-type 'alphabetic-sort)
-  ;; Sort attributes inside block.
-  (define-key css-mode-map (kbd "C-c C-s") #'com-css-sort-attributes-block)
-  ;; Sort attributes through the whole document.
-  (define-key css-mode-map (kbd "C-c C-d") #'com-css-sort-attributes-document))
-
-;; Javascript setting
+;; Javascript
 ;; ==============================================
 (use-package js2-mode
   :straight (:type git :repo "mooz/js2-mode")
   :config
-    (add-hook 'js2-mode-hook 'lsp)
-    (add-hook 'javascript-mode-hook 'js2-mode))
+  (add-hook 'before-save-hook #'js2-before-save-hook)
+  (add-hook 'js2-mode-hook 'lsp)
+    (setq auto-mode-alist
+	(cons '("\\.js\\'" . js2-mode) auto-mode-alist)))
 
 (use-package web-beautify
   :straight (:type git :repo "yasuyk/web-beautify")
@@ -560,6 +564,11 @@
         "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/css-beautify.js")
   (setq web-beautify-html-program
         "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/html-beautify.js"))
+
+(defun js2-before-save-hook ()
+  (when (eq major-mode 'js2-mode)
+    (web-beautify-js)
+    (message "File is Beautified")))
 
 (provide 'init)
 ;;; init.el ends here
