@@ -40,8 +40,6 @@
 (use-package em-tramp
   :config
   (add-to-list 'eshell-modules-list 'eshell-tramp)
-  (setq tramp-verbose 10)
-  (setq password-cache-expiry nil)
   :after emacs
   :straight (:type built-in))
 
@@ -83,13 +81,12 @@
   (setq indent-tabs-mode nil)
   (nsm-settings-file "~/.emacs.d/network-security.data")
   (history-delete-duplicates t)
-  (global-auto-revert-mode 1)
   (display-time-default-load-average nil)
   (history-length 600)
+  (put 'dired-find-alternate-file 'disabled nil)
   :config
   (setq display-time-mail-string "")
   (setq display-time-day-and-date t)
-  (setq global-auto-revert-non-file-buffers t)
   (setq display-time-24hr-format t)
   (setq undo-limit 800000)
   (setq undo-strong-limit 12000000)
@@ -213,7 +210,7 @@
                           (exwm-workspace-switch-create ,i))))
                     (number-sequence 0 9))))
 
-  (defun efs/exwm-change-screen-hook ()
+(defun efs/exwm-change-screen-hook ()
     (let ((xrandr-output-regexp "\n\\([^ ]+\\) connected ")
           default-output)
       (with-temp-buffer
@@ -343,8 +340,7 @@
 ;; ===============================================
 
 (use-package php-cs-fixer
-  :load-path ("~/.emacs.d/src/php-cs-fixer")
-  :straight (:type built-in)
+  :straight (:type git :repo "Nazar65/emacs-php-cs-fixer")
   :after php-mode
   :config
   (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"))
@@ -392,7 +388,6 @@
   :init (dap-mode -1)
   :config
   (require 'dap-php)
-  (define-key php-mode-map (kbd "<f12>") 'dap-mode)
   (define-key dap-mode-map (kbd "<f5>") 'dap-debug)
   (define-key dap-mode-map (kbd "s-o") 'dap-next)
   (define-key dap-mode-map (kbd "s-i") 'dap-step-in)
@@ -412,6 +407,7 @@
 (use-package php-mode
   :straight t
   :config
+  (define-key php-mode-map (kbd "<f12>") 'dap-mode)
   (add-hook 'php-mode-hook
             (lambda ()
               (add-hook 'before-save-hook 'php-cs-fixer-before-save)
@@ -549,25 +545,21 @@
 
 ;; Javascript setting
 ;; ==============================================
-
-;; General javascript mode
-(use-package js2-mode :straight t)
-
-;; Autocomplete mode for javascript
-(use-package ac-js2
-  :straight t
-  :after js2-mode
+(use-package js2-mode
+  :straight (:type git :repo "mooz/js2-mode")
   :config
-  (add-to-list 'company-backends 'ac-js2-company)
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-  (add-to-list 'company-backends 'ac-js2-company))
+    (add-hook 'js2-mode-hook 'lsp)
+    (add-hook 'javascript-mode-hook 'js2-mode))
 
-;; Run jscs sniffer to fix edited file
-(use-package jscs
-  :straight t
+(use-package web-beautify
+  :straight (:type git :repo "yasuyk/web-beautify")
   :config
-  (add-hook 'js2-mode-hook #'jscs-fix-run-before-save)
-  (setq flycheck-eslintrc "~/.eslintrc"))
+  (setq web-beautify-js-program
+        "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/js-beautify.js")
+  (setq web-beautify-css-program
+        "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/css-beautify.js")
+  (setq web-beautify-html-program
+        "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/html-beautify.js"))
 
 (provide 'init)
 ;;; init.el ends here
