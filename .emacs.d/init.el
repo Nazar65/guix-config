@@ -40,6 +40,8 @@
 (use-package em-tramp
   :config
   (add-to-list 'eshell-modules-list 'eshell-tramp)
+  (setq tramp-verbose 10)
+  (setq password-cache-expiry nil)
   :after emacs
   :straight (:type built-in))
 
@@ -81,12 +83,13 @@
   (setq indent-tabs-mode nil)
   (nsm-settings-file "~/.emacs.d/network-security.data")
   (history-delete-duplicates t)
+  (global-auto-revert-mode 1)
   (display-time-default-load-average nil)
   (history-length 600)
-  (put 'dired-find-alternate-file 'disabled nil)
   :config
   (setq display-time-mail-string "")
   (setq display-time-day-and-date t)
+  (setq global-auto-revert-non-file-buffers t)
   (setq display-time-24hr-format t)
   (setq undo-limit 800000)
   (setq undo-strong-limit 12000000)
@@ -340,23 +343,11 @@
 ;; ===============================================
 
 (use-package php-cs-fixer
-  :straight (:type git :repo "OVYA/php-cs-fixer")
+  :load-path ("~/.emacs.d/src/php-cs-fixer")
+  :straight (:type built-in)
   :after php-mode
   :config
-  (setq php-cs-fixer-rules-level-part-options (quote ("@PSR2")))
-  (setq php-cs-fixer-rules-fixer-part-options
-        (quote("no_multiline_whitespace_before_semicolons"
-              "no_unused_imports"
-               "declare_strict_types"
-               "no_whitespace_before_comma_in_array"
-               "array_indentation"
-               "no_spaces_inside_parenthesis"
-               "multiline_whitespace_before_semicolons"
-               "no_extra_blank_lines"
-               "no_spaces_around_offset"
-               "trim_array_spaces"
-               "whitespace_after_comma_in_array"
-               "binary_operator_spaces"))))
+  (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"))
 
 (use-package lsp-mode
   :straight (:type git :repo "emacs-lsp/lsp-mode")
@@ -389,7 +380,7 @@
   :config
   ;;phpunit settings
   (setq phpunit-root-directory "./")
-  (setq phpunit-configuration-file "./dev/tests/unit/phpunit.xml.dist")
+  (setq phpunit-configuration-file "./dev/tests/integration/phpunit.xml.dist")
   (define-key php-mode-map (kbd "C-t t") 'phpunit-current-test)
   (define-key php-mode-map (kbd "C-t c") 'phpunit-current-class)
   (define-key php-mode-map (kbd "C-t p") 'phpunit-current-project))
@@ -440,13 +431,13 @@
   :commands (slack-start)
   :config
   (slack-register-team
-   :name "i4"
+   :name "atwix"
    :default t
    :token (auth-source-pick-first-password
-           :host "i4.slack.com"
+           :host "atwix.slack.com"
            :user "token" :type 'netrc :max 1)
    :cookie (auth-source-pick-first-password
-            :host "i4.slack.com"
+            :host "atwix.slack.com"
             :user "cookie" :type 'netrc :max 1)
    :subscribed-channels '((general)))
   (setq slack-buffer-emojify t)
@@ -488,7 +479,7 @@
   (with-timeout
       (30 (message "Gnus timed out."))
     ad-do-it))
-  (gnus-demon-add-handler 'gnus-group-get-new-news 1 nil)
+  (gnus-demon-add-handler 'gnus-group-get-new-news 5 nil)
   (setq gnus-secondary-select-methods
         '((nnml "local.mail")
           (nntp "news.gnus.org")
@@ -519,7 +510,6 @@
             ("nnimap+i4:INBOX" . "i4"))
         user-mail-address	"nazarn96@gmail.com"
         user-full-name	"Nazar Klovanych"
-        mail-sources '((file :path "/var/spool/mail/nazar"))
         gnus-thread-sort-functions'((not gnus-thread-sort-by-number) gnus-thread-sort-by-score)
         gnus-select-method '(nnnil)
         w3m-fill-column 100
