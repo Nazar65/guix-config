@@ -49,6 +49,9 @@
   :init
   (desktop-environment-mode))
 
+(use-package bluetooth
+  :straight (:type git :host github :repo "emacs-straight/bluetooth"))
+
 (use-package restclient
   :straight (:type git :host github :repo "pashky/restclient.el"))
 
@@ -318,6 +321,7 @@
 
 (use-package smart-mode-line
   :straight t
+  :commands (smart-mode-line-enable)
   :init (smart-mode-line-enable)
   :config
   (add-hook 'exwm-init-hook 'smart-mode-line-enable)
@@ -343,12 +347,18 @@
   :config (yas-global-mode))
 
 (use-package yasnippets
-  :straight (:type git :host github :repo "AndreaCrotti/yasnippet-snippets")
+  :straight (:type git
+                   :host github
+                   :repo "AndreaCrotti/yasnippet-snippets"
+                   :pre-build (#'yasnippet-link-snippets))
   :config
   (add-hook 'php-mode-hook #'yas-minor-mode))
 
 (use-package php-doc-block
-  :straight (:type git :host github :repo "moskalyovd/emacs-php-doc-block")
+  :after php-mode
+  :straight (:type git
+                   :host github
+                   :repo "moskalyovd/emacs-php-doc-block")
   :config
   (define-key php-mode-map (kbd "<C-tab>") 'php-doc-block))
 
@@ -356,7 +366,8 @@
   :straight (:type git :repo "Nazar65/emacs-php-cs-fixer")
   :after php-mode
   :config
-  (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"))
+  (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"
+        php-cs-fixer-cache-file-path "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.cache"))
 
 (use-package lsp-mode
   :straight (:type git :repo "emacs-lsp/lsp-mode")
@@ -472,66 +483,6 @@
   :config
   (setq alert-default-style 'libnotify))
 
-(use-package gnus-notify
-  :straight (:type built-in)
-  :after gnus
-  :load-path ("~/.emacs.d/src/gnus-notify"))
-
-(use-package smtpmail :straight t)
-
-(use-package gnus
-  :straight (:type built-in)
-  :init (require 'gnus-notify)
-  :config
-  (defadvice gnus-group-get-new-news (around gnus-demon-timeout activate)
-  "Timeout for Gnus."
-  (with-timeout
-      (30 (message "Gnus timed out."))
-    ad-do-it))
-  (gnus-demon-add-handler 'gnus-group-get-new-news 5 nil)
-  (setq gnus-secondary-select-methods
-        '((nnml "local.mail")
-          (nntp "news.gnus.org")
-          (nnimap "gmail"
-                  (nnimap-address "imap.gmail.com")
-                  (nnimap-server-port "imaps")
-                  (nnimap-stream ssl))
-          (nnimap "i4"
-                  (nnimap-address "imap.gmail.com")
-                  (nnimap-server-port "imaps")
-                  (nnimap-stream ssl))))
-    (setq gnus-parameters
-        '(("INBOX"
-           (gnus-use-adaptive-scoring nil)
-           (gnus-use-scoring nil)
-           (visible . t)
-           (display . all)
-           (modeline-notify . t))
-          ("mail.misc"
-           (gnus-use-adaptive-scoring nil)
-           (gnus-use-scoring nil)
-           (visible . t)
-           (display . all)
-           (modeline-notify . t)))
-          group-name-map
-          '(("nnml+local.mail:mail.misc" . "Local")
-            ("nnimap+gmail:INBOX" . "Gmail")
-            ("nnimap+i4:INBOX" . "i4"))
-        user-mail-address	"nazarn96@gmail.com"
-        user-full-name	"Nazar Klovanych"
-        gnus-thread-sort-functions'((not gnus-thread-sort-by-number) gnus-thread-sort-by-score)
-        gnus-select-method '(nnnil)
-        w3m-fill-column 100
-        mm-text-html-renderer 'gnus-w3m
-        w3m-toggle-inline-images t
-        w3m-default-display-inline-images t
-        mm-inline-text-html-with-images t
-        send-mail-function 'smtpmail-send-it
-        smtpmail-default-smtp-server "smtp.gmail.com"
-        smtpmail-smtp-server "smtp.gmail.com"
-        smtpmail-smtp-service 587
-        gnus-ignored-newsgroups "^to\\.\\|^[0-9. ]+\\( \\|$\\)\\|^[\"]\"[#'()]"))
-
 (use-package magit
   :straight (:type git :repo "magit/magit")
   :config
@@ -555,20 +506,15 @@
     (setq auto-mode-alist
 	(cons '("\\.js\\'" . js2-mode) auto-mode-alist)))
 
-(use-package web-beautify
-  :straight (:type git :repo "yasuyk/web-beautify")
-  :config
-  (setq web-beautify-js-program
-        "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/js-beautify.js")
-  (setq web-beautify-css-program
-        "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/css-beautify.js")
-  (setq web-beautify-html-program
-        "/home/nazar/.dotfiles/.config/js/web-beatify/node_modules/js-beautify/js/bin/html-beautify.js"))
-
 (defun js2-before-save-hook ()
   (when (eq major-mode 'js2-mode)
     (web-beautify-js)
     (message "File is Beautified")))
+
+(defun yasnippet-link-snippets ()
+  (start-process-shell-command
+   "" nil
+   "ln -s ~/.emacs.d/straight/repos/yasnippet-snippets/snippets ~/.emacs.d/straight/build/yasnippets/snippets"))
 
 (provide 'init)
 ;;; init.el ends here

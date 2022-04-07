@@ -1,2 +1,2 @@
 alias php php -c ~/.config/php/php.ini $*
-alias switch-instance rm -rf ~/srv && mkdir ~/srv && ln -s ~/Projects/atwix/$1/* ~/srv/
+alias switch-instance rm -rf ~/srv && mkdir ~/srv && ln -s ~/Projects/atwix/$1/* ~/srv/ && ls -l ~/srv
