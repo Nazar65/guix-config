@@ -153,9 +153,6 @@
   (when (file-exists-p custom-file)
     (load custom-file)))
 
-(use-package guix
-  :straight t)
-
 (use-package geiser-guile
   :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode))
   :straight t)
@@ -240,7 +237,7 @@
   (gcmh-mode 1))
 
 (use-package helm
-  :after emacs
+  :after exwm
   :straight t
   :init (helm-mode)
   :bind (("C-x b" . 'helm-mini)
@@ -269,9 +266,14 @@
   :straight (:type built-in)
   :init (flyspell-mode))
 
-(use-package helm-rg
-  :straight t
-  :after helm-projectile)
+(use-package helm-ag
+  :straight (:type git :host github :repo "emacsorphanage/helm-ag")
+  :config
+  (setq helm-ag-insert-at-point 'word)
+  (define-key projectile-mode-map (kbd "C-c p s s") 'helm-do-ag)
+  (setq helm-ag-base-command "ag --nocolor --nogroup")
+  (setq helm-ag-success-exit-status '(0 2))
+  :after helm)
 
 (use-package helm-projectile
   :straight t
@@ -315,24 +317,32 @@
 ;; Global customizations
 ;; ===============================================
 
-;; An atom-one-dark theme for smart-mode-line
-(use-package smart-mode-line-atom-one-dark-theme
-  :straight t)
-
-(use-package smart-mode-line
-  :straight t
-  :commands (smart-mode-line-enable)
-  :init (smart-mode-line-enable)
-  :config
-  (add-hook 'exwm-init-hook 'smart-mode-line-enable)
-  (setq sml/theme 'atom-one-dark)
-  (sml/setup))
-
 (use-package doom-themes
   :straight t
   :init(load-theme 'doom-one t)
   :config
   (doom-themes-visual-bell-config))
+
+(use-package all-the-icons
+  :after doom-modeline
+  :straight (:type git :host github :repo "domtronn/all-the-icons.el"))
+
+(use-package mu4e-alert
+  :straight (:type git :host github :repo "iqbalansari/mu4e-alert")
+  :init (mu4e-alert-enable-mode-line-display)
+  :config
+  (setq mu4e-alert-email-notification-types '(count))
+  (mu4e-alert-set-default-style 'libnotify)
+  (mu4e-alert-enable-notifications))
+
+(use-package doom-modeline
+  :straight (:type git :host github :repo "seagle0128/doom-modeline")
+  :hook (after-init . doom-modeline-mode)
+  :config
+  (setq doom-modeline-height 25)
+  (setq doom-modeline-mu4e t)
+  (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
+  (setq doom-modeline-vcs-max-length 32))
 
 (use-package company
   :straight t
@@ -395,10 +405,8 @@
         lsp-ui-doc-delay 0.500))
 
 (use-package phpunit
-  :straight t
-  :after php-mode
+  :straight (:type git :host github :repo "nlamirault/phpunit.el")
   :config
-  ;;phpunit settings
   (setq phpunit-root-directory "./")
   (setq phpunit-configuration-file "./dev/tests/integration/phpunit.xml.dist")
   (define-key php-mode-map (kbd "C-t t") 'phpunit-current-test)
@@ -429,7 +437,7 @@
 
 ;; Php mode
 (use-package php-mode
-  :straight t
+  :straight (:type git :host github :repo "emacs-php/php-mode")
   :config
   (define-key php-mode-map (kbd "<f12>") 'dap-mode)
   (add-hook 'php-mode-hook
