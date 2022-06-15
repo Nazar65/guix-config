@@ -4,7 +4,7 @@
  (guix utils)
  (guix packages)
  (packages composer)
- (packages php74)
+ (packages php73)
  (gnu packages audio)
  (gnu packages pulseaudio)
  (gnu packages autotools)
@@ -27,7 +27,7 @@
 (define %php-socket-path
   (string-append "/var/run/php"
 		 (version-major
-		  (package-version php74))
+		  (package-version php73))
 		 "-fpm.sock"))
 
 (define %my-desktop-services
@@ -117,7 +117,7 @@
      (specification->package "autoconf")
      (specification->package "notification-daemon")
      (specification->package "ungoogled-chromium")
-     (specification->package "php74")
+     (specification->package "php73")
      (specification->package "elasticsearch")
      (specification->package "phpfixer")
      (specification->package "xdebug3")
@@ -160,7 +160,7 @@
 </FilesMatch>"))))))
      (service php-fpm-service-type
 	      (php-fpm-configuration
-	       (php php74)
+	       (php php73)
 	       (socket %php-socket-path)
 	       (user %wwwuser)
 	       (group %wwwgroup)

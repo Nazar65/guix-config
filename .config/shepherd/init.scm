@@ -16,16 +16,7 @@
     #:stop (make-kill-destructor)
     #:respawn? #t))
 
-(define pulseaudio-equalizer
-  (make <service>
-    #:provides '(pulseaudio-equalizer)
-    #:docstring "Enable pulseaudio-equalizer"
-    #:start (make-forkexec-constructor '("pulseaudio-equalizer" "enable"))
-    #:stop (make-kill-destructor)
-    #:respawn? #t))
-
 (register-services notification-daemon)
 (register-services pulseaudio-daemon)
-(register-services pulseaudio-equalizer)
 
 (for-each start '(notification-daemon pulseaudio-daemon pulseaudio-equalizer))

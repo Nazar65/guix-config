@@ -49,6 +49,15 @@
   :init
   (desktop-environment-mode))
 
+(use-package auto-complete
+  :straight (:type git :host github :repo "auto-complete/auto-complete")
+  :config
+  (ac-config-default)
+  (ac-set-trigger-key "TAB"))
+
+(use-package ztree
+  :straight (:type git :host github :repo "fourier/ztree"))
+
 (use-package bluetooth
   :straight (:type git :host github :repo "emacs-straight/bluetooth"))
 
