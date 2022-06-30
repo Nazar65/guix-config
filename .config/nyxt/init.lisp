@@ -4,8 +4,8 @@
 (nyxt::load-lisp "~/.config/nyxt/themes/standard-dark.lisp")
 
 (defvar autofills
-  (list (make-autofill :name "email-work" :fill "n.klovanych@atwix.com")
-        (make-autofill :name "email-personal" :fill "nazarn96@gmail.com")))
+  (list
+   (make-autofill :name "example" :fill "here")))
 
 ;;configuration for browser
 (define-configuration browser
