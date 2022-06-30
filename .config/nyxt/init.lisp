@@ -3,9 +3,15 @@
 ;;loading of config files
 (nyxt::load-lisp "~/.config/nyxt/themes/standard-dark.lisp")
 
+(defvar autofills
+  (list (make-autofill :name "email-work" :fill "n.klovanych@atwix.com")
+        (make-autofill :name "email-personal" :fill "nazarn96@gmail.com")))
+
 ;;configuration for browser
 (define-configuration browser
-  ((session-restore-prompt :always-ask)))
+    ((session-restore-prompt :always-restore)
+     #+nyxt-2
+     (autofills autofills)))
 
 ;;default modes for buffer and nosave buffer
 (define-configuration (web-buffer nosave-buffer)
@@ -14,14 +20,22 @@
                     ,@%slot-default%))))
 
 (define-configuration buffer
-  ((smooth-scrolling nil)
-   (override-map (let ((map (make-keymap "my-override-map")))
-                   (define-key map
+    ((smooth-scrolling nil)
+     (search-always-auto-complete-p nil)
+     (override-map (let ((map (make-keymap "my-override-map")))
+                     (define-key map
                          "C-b d" 'delete-buffer
-                         "C-c i" 'open-inspector
-                         "C-s" 'query-selection-in-search-engine
-                         "C-c" 'nyxt/web-mode::copy)
+                         "C-b c" 'make-buffer
+                         "C-b b" 'set-url-from-bookmark
+                         "C-p c" 'copy-password
+                         "C-n c" 'copy-username
+                         "C-d i" 'open-inspector
+                         "C-s" 'query-selection-in-search-engine)
                      map))))
+
+#+nyxt-3
+(define-configuration nyxt/autofill-mode:autofill-mode
+    ((nyxt/autofill-mode:autofills autofills)))
 
 (define-configuration nyxt/reduce-tracking-mode:reduce-tracking-mode
   ((nyxt/reduce-tracking-mode:preferred-user-agent
