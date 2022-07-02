@@ -336,6 +336,10 @@
   :after doom-modeline
   :straight (:type git :host github :repo "domtronn/all-the-icons.el"))
 
+(use-package mu4e
+  :straight (:type built-in)
+  :init (load "~/.emacs.d/mu4e-config.el"))
+
 (use-package mu4e-alert
   :straight (:type git :host github :repo "iqbalansari/mu4e-alert")
   :init (mu4e-alert-enable-mode-line-display)
@@ -361,17 +365,6 @@
 
 ;; PHP settings
 ;; ===============================================
-(use-package yasnippet
-  :straight (:type git :host github :repo "joaotavora/yasnippet")
-  :config (yas-global-mode))
-
-(use-package yasnippets
-  :straight (:type git
-                   :host github
-                   :repo "AndreaCrotti/yasnippet-snippets"
-                   :pre-build (#'yasnippet-link-snippets))
-  :config
-  (add-hook 'php-mode-hook #'yas-minor-mode))
 
 (use-package php-doc-block
   :after php-mode
@@ -501,7 +494,7 @@
   (setq alert-default-style 'libnotify))
 
 (use-package magit
-  :straight (:type git :repo "magit/magit")
+  :straight (:type git :host github :repo "magit/magit")
   :config
   (global-set-key (kbd "C-x g") 'magit-status))
 
@@ -527,11 +520,6 @@
   (when (eq major-mode 'js2-mode)
     (web-beautify-js)
     (message "File is Beautified")))
-
-(defun yasnippet-link-snippets ()
-  (start-process-shell-command
-   "" nil
-   "ln -s ~/.emacs.d/straight/repos/yasnippet-snippets/snippets ~/.emacs.d/straight/build/yasnippets/snippets"))
 
 (provide 'init)
 ;;; init.el ends here
