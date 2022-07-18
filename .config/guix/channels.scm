@@ -19,7 +19,7 @@
         (url "https://github.com/Nazar65/my-guix-packages-channel")
         (introduction
          (make-channel-introduction
-          "5e8ba5ce350d28a5fefcbfb7ed87910b0d3be430"
+          "1a12779ad12a201b9d03013e1060012ba3cd4417"
           (openpgp-fingerprint
            "736A C00E 1254 378B A982  7AF6 9DBE 8265 81B6 4490"))))
        %default-channels)
