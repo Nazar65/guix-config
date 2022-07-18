@@ -1,23 +1,25 @@
 (in-package :nyxt-user)
 
 ;;loading of config files
-(nyxt::load-lisp "~/.config/nyxt/themes/standard-dark.lisp")
+(nyxt::load-lisp "~/.config/nyxt/statusline.lisp")
+(nyxt::load-lisp "~/.config/nyxt/stylesheet.lisp")
 
 (defvar autofills
   (list
-   (make-autofill :name "example" :fill "here")))
+   (nyxt/autofill-mode:make-autofill :name "example" :fill "here")))
 
-;;configuration for browser
+(defvar *web-buffer-modes*
+  '(nyxt/auto-mode:auto-mode
+    nyxt/blocker-mode:blocker-mode
+    nyxt/force-https-mode:force-https-mode
+    nyxt/reduce-tracking-mode:reduce-tracking-mode
+    nyxt/user-script-mode:user-script-mode))
+
 (define-configuration browser
-    ((session-restore-prompt :always-restore)
-     #+nyxt-2
-     (autofills autofills)))
+    ((session-restore-prompt :always-restore)))
 
-;;default modes for buffer and nosave buffer
-(define-configuration (web-buffer nosave-buffer)
-  ((default-modes `(reduce-tracking-mode
-                    blocker-mode
-                    ,@%slot-default%))))
+(define-configuration web-buffer
+  ((default-modes (append *web-buffer-modes* %slot-default%))))
 
 (define-configuration buffer
     ((smooth-scrolling nil)
@@ -25,15 +27,12 @@
      (override-map (let ((map (make-keymap "my-override-map")))
                      (define-key map
                          "C-b d" 'delete-buffer
-                         "C-b c" 'make-buffer
-                         "C-b b" 'set-url-from-bookmark
                          "C-p c" 'copy-password
                          "C-n c" 'copy-username
                          "C-d i" 'open-inspector
                          "C-s" 'query-selection-in-search-engine)
                      map))))
 
-#+nyxt-3
 (define-configuration nyxt/autofill-mode:autofill-mode
     ((nyxt/autofill-mode:autofills autofills)))
 

@@ -190,14 +190,25 @@
     (pcase (buffer-name)
       ("*eshell*" (exwm-workspace-move 1))))
 
+  (defun remove-whitespaces (string)
+    (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
+
+  (defun bluetooth/switch-profile (profile)
+    (let ((card
+	   (remove-whitespaces
+	    (replace-regexp-in-string
+	     "Name:"
+	     ""
+	     (shell-command-to-string "pactl list | grep bluez_card")))))
+      (start-process "set-bluetooth-profile" nil "pactl" "set-card-profile" card profile)))
+
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (start-process-shell-command "" nil  "shepherd")
     (eshell))
 
   (setq exwm-input-global-keys
-        `(([?\s-r] . exwm-reset)
-          ([s-print] . desktop-environment-screenshot-part)
+        `(([s-print] . desktop-environment-screenshot-part)
           ([s-escape] . desktop-environment-lock-screen)
           ([XF86MonBrightnessDown] . desktop-environment-brightness-decrement)
           ([XF86MonBrightnessUp] . desktop-environment-brightness-increment)
@@ -207,6 +218,12 @@
           ([s-right] . windmove-right)
           ([s-up] . windmove-up)
           ([s-down] . windmove-down)
+	  ([?\s-.] . (lambda ()
+			  (interactive)
+			  (bluetooth/switch-profile "a2dp_sink")))
+	  ([?\s-,] . (lambda ()
+			  (interactive)
+			  (bluetooth/switch-profile "handsfree_head_unit")))
           ([?\s-&] . (lambda (command)
                        (interactive (list (read-shell-command "$ ")))
                        (start-process-shell-command command nil command)))
@@ -338,7 +355,9 @@
 
 (use-package mu4e
   :straight (:type built-in)
-  :init (load "~/.emacs.d/mu4e-config.el"))
+  :init (load "~/.emacs.d/mu4e-config.el")
+  :config
+  (run-with-timer 0 300 #'mu4e-update-mail-and-index t))
 
 (use-package mu4e-alert
   :straight (:type git :host github :repo "iqbalansari/mu4e-alert")

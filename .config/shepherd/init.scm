@@ -12,7 +12,7 @@
   (make <service>
     #:provides '(pulseaudio-daemon)
     #:docstring "Run pulseaudio-daemon"
-    #:start (make-forkexec-constructor '("pulseaudio" "-D"))
+    #:start (make-forkexec-constructor '("pulseaudio" "-vvv"))
     #:stop (make-kill-destructor)
     #:respawn? #t))
 

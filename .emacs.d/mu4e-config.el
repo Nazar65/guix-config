@@ -33,14 +33,12 @@
       "Nazar Klovanych\n"
       "Senior PHP Developer\n"))
 
-;; sending mail -- replace USERNAME with your gmail username
-;; also, make sure the gnutls command line utils are installed
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it
    starttls-use-gnutls t
    smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
    smtpmail-auth-credentials
-     '(("smtp.gmail.com" 587 "n.klovanych@gmail.com" nil))
+     '(("smtp.gmail.com" 587 "n.klovanych@atwix.com" nil))
    smtpmail-default-smtp-server "smtp.gmail.com"
    smtpmail-smtp-server "smtp.gmail.com"
    smtpmail-smtp-service 587)
