@@ -30,8 +30,10 @@
    user-full-name  "Nazar Klovanych"
    mu4e-compose-signature
     (concat
-      "Nazar Klovanych\n"
-      "Senior PHP Developer\n"))
+     "Nazar Klovanych | "
+     "Magento 2 Developer at "
+     "<#part type=text/html><a href='https://www.atwix.com/'>Atwix</a><#/part> \n"
+     "<#part type=text/html><br><br><img src='https://www.atwix.com/assets/atwix_logo.png' width='96' height='42'><#/part>"))
 
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it

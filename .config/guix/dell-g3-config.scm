@@ -4,7 +4,7 @@
  (guix utils)
  (guix packages)
  (packages composer)
- (packages php73)
+ (packages php74)
  (gnu packages audio)
  (gnu packages pulseaudio)
  (gnu packages autotools)
@@ -19,7 +19,7 @@
  (gnu services databases)
  (gnu services mail)
  (gnu services shepherd))
-(use-service-modules base dbus desktop networking  xorg)
+(use-service-modules base dbus desktop networking xorg)
 
 (define %wwwuser "nazar")
 (define %wwwgroup "httpd")
@@ -27,12 +27,33 @@
 (define %php-socket-path
   (string-append "/var/run/php"
 		 (version-major
-		  (package-version php73))
+		  (package-version php74))
 		 "-fpm.sock"))
+
+(define (simple-https-website domain directory documentRoot)
+  (list (httpd-virtualhost
+         "*:443"
+         (list "
+                ServerName " domain "
+                ServerName " domain "
+                DocumentRoot " documentRoot "
+                <Directory " directory "/>
+                    Options -Indexes +FollowSymLinks +MultiViews
+                    AllowOverride All
+                    Require all granted
+                </Directory>
+                SSLEngine on
+                SSLCertificateFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.crt
+                SSLCertificateKeyFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.key\n"))))
+
 
 (define %my-desktop-services
   (modify-services
       %desktop-services
+    (pulseaudio-service-type
+     config =>
+     (pulseaudio-configuration
+      (inherit config)))
     (elogind-service-type
      config =>
      (elogind-configuration
@@ -62,15 +83,8 @@
      (group "users")
      (home-directory "/home/nazar")
      (supplementary-groups
-      '("wheel" "netdev" "audio" "video" "httpd" "php-fpm")))
-    (user-account
-     (name "openvpn")
-     (group "openvpn")
-     (system? #t)
-     (comment "openvpn user")
-     (home-directory "/var/empty")
-     (shell (file-append shadow "/sbin/nologin")))
-    %base-user-accounts))
+      '("wheel" "netdev" "audio" "video")))
+   %base-user-accounts))
   (setuid-programs
    (append
     (list (setuid-program
@@ -94,10 +108,27 @@
      (specification->package "libnotify")
      (specification->package "brightnessctl")
      (specification->package "xrandr")
+     (specification->package "pavucontrol")
+     (specification->package "password-store")
+     (specification->package "gst-plugins-ugly")
+     (specification->package "gst-plugins-good")
+     (specification->package "gst-plugins-base")
+     (specification->package "gst-plugins-bad")
+     (specification->package "gst-libav")
+     (specification->package "gnupg")
+     (specification->package "pinentry")
      (specification->package "ripgrep")
      (specification->package "icecat")
+     (specification->package "nyxt-3")
      (specification->package "playerctl")
      (specification->package "git")
+     (specification->package "mu")
+     (specification->package "imagemagick")
+     (specification->package "gifsicle")
+     (specification->package "offlineimap")
+     (specification->package "isync")
+     (specification->package "msmtp")
+     (specification->package "the-silver-searcher")
      (specification->package "ispell")
      (specification->package "stow")
      (specification->package "node")
@@ -105,19 +136,26 @@
      (specification->package "w3m")
      (specification->package "curl")
      (specification->package "git")
+     (specification->package "network-manager")
      (specification->package "httpd")
      (specification->package "mysql")
      (specification->package "scrot")
      (specification->package "file")
      (specification->package "ly")
+     (specification->package "speedtest-cli")
+     (specification->package "emacs-telega")
+     (specification->package "font-gnu-freefont")
+     (specification->package "font-gnu-unifont")
+     (specification->package "tdlib")
+     (specification->package "make")
+     (specification->package "gcc")
      (specification->package "opensmtpd")
      (specification->package "setxkbmap")
      (specification->package "pulseaudio-equalizer")
      (specification->package "rsync")
      (specification->package "autoconf")
      (specification->package "notification-daemon")
-     (specification->package "ungoogled-chromium")
-     (specification->package "php73")
+     (specification->package "php74")
      (specification->package "elasticsearch")
      (specification->package "phpfixer")
      (specification->package "xdebug3")
@@ -127,7 +165,8 @@
      (specification->package "alsa-utils")
      (specification->package "emacs-desktop-environment")
      (specification->package "nss-certs"))
-    %base-packages))
+       %base-packages))
+
   (services
    (append
     (list
@@ -138,11 +177,15 @@
 	       (config
 		(httpd-config-file
 		 (user %wwwuser)
+		 (listen '("443"))
 		 (modules
 		  (cons*
 		   (httpd-module
 		    (name "rewrite_module")
 		    (file "modules/mod_rewrite.so"))
+		   (httpd-module
+		    (name "ssl_module")
+		    (file "modules/mod_ssl.so"))
 		   (httpd-module
 		    (name "proxy_module")
 		    (file "modules/mod_proxy.so"))
@@ -160,33 +203,23 @@
 </FilesMatch>"))))))
      (service php-fpm-service-type
 	      (php-fpm-configuration
-	       (php php73)
-	       (socket %php-socket-path)
+	       (php php74)
 	       (user %wwwuser)
 	       (group %wwwgroup)
+	       (socket %php-socket-path)
 	       (socket-user %wwwuser)
 	       (socket-group %wwwgroup)
 	       (display-errors "#t")
 	       (php-ini-file %local-php-ini)))
-     (simple-service
-      'magentoi4 httpd-service-type
-      (list
-       (httpd-virtualhost
-	"alienware.ai"
-	(list
-	 (string-join
-	  '("ServerName alienware.ai"
-	    "ServerAlias alienware.ai"
-	    "DocumentRoot /home/nazar/srv/pub"
-	    "<Directory /home/nazar/srv>"
-	    "    Options -Indexes +FollowSymLinks +MultiViews"
-	    "    AllowOverride All"
-	    "    Require all granted"
-	    "</Directory>")
-	  "\n")))))
 
+     (simple-service 'alienware.ai httpd-service-type
+                     (simple-https-website "alienware.ai"
+                                           "/home/nazar/srv"
+					   "/home/nazar/srv/pub"))
      (service mysql-service-type
 	      (mysql-configuration
+               (socket "/run/mysqld/mysqld.sock")
+               (extra-content "datadir=/warehouse/databases")
 	       (auto-upgrade? "#f")))
 
      (service opensmtpd-service-type
@@ -196,13 +229,10 @@
      (service ladspa-service-type
               (ladspa-configuration (plugins (list swh-plugins))))
 
+     (bluetooth-service #:auto-enable? #t)
      (service tlp-service-type
 	      (tlp-configuration
 	       (tlp-default-mode "BAT")
-	       (energy-perf-policy-on-ac "performance")
-	       (energy-perf-policy-on-bat "normal")
-	       (wifi-pwr-on-ac? #f)
-	       (wifi-pwr-on-bat? #f)
 	       (usb-autosuspend? #t)
 	       (cpu-scaling-governor-on-ac
 		(list "performance"))
@@ -210,19 +240,20 @@
      (set-xorg-configuration
       (xorg-configuration
        (extra-config (list (string-join
-	  '("Section \"InputClass\""
-            "Identifier \"touchpad\""
-            "Driver \"libinput\""
-            "MatchIsTouchpad \"on\""
-            "Option \"DisableWhileTyping\" \"on\""
-            "Option \"Tapping\" \"1\""
-            "Option \"NaturalScrolling\" \"1\""
-            "Option \"Emulate3Buttons\" \"yes\""
-            "EndSection") "\n")))
+	                    '("Section \"InputClass\""
+                              "Identifier \"touchpad\""
+                              "Driver \"libinput\""
+                              "MatchIsTouchpad \"on\""
+                              "Option \"DisableWhileTyping\" \"on\""
+                              "Option \"Tapping\" \"1\""
+                              "Option \"NaturalScrolling\" \"1\""
+                              "Option \"Emulate3Buttons\" \"yes\""
+                              "EndSection") "\n")))
        (keyboard-layout keyboard-layout))))
     %my-desktop-services))
   (kernel-arguments
-   '("snd_hda_intel.dmic_detect=0"))
+   '("snd-intel-dspcfg.dsp_driver=1"
+     "modprobe.blacklist=nouveau"))
   (bootloader
    (bootloader-configuration
     (bootloader grub-efi-bootloader)
@@ -237,6 +268,12 @@
       (mount-point "/home")
       (device
        (uuid "139bbb7b-0cec-4a81-97ca-074dc63d3d0c"
+             'ext4))
+      (type "ext4"))
+    (file-system
+      (mount-point "/warehouse")
+      (device
+       (uuid "fd919fec-008f-42b6-a480-2395bc14709d"
              'ext4))
       (type "ext4"))
     (file-system

@@ -61,6 +61,13 @@
 (use-package bluetooth
   :straight (:type git :host github :repo "emacs-straight/bluetooth"))
 
+(use-package telega
+  :straight (:type git :host github :repo "zevlg/telega.el" branch: "release-0.8.0")
+  :init (add-hook 'telega-load-hook 'telega-mode-line-mode)
+  :config
+  (setq telega-mode-line-mode t)
+  (setq telega-server-libs-prefix "~/.guix-profile"))
+
 (use-package restclient
   :straight (:type git :host github :repo "pashky/restclient.el"))
 
@@ -86,7 +93,13 @@
   (tooltip-mode 0)
   (menu-bar-mode 0)
   (display-time-mode 1)
-  (display-battery-mode 1)
+  (display-battery-mode 1):mode
+  (("\\.phtml\\'"      . web-mode)
+   ("\\.tpl\\.php\\'"  . web-mode)
+   ("\\.xml\\'"        . web-mode)
+   ("\\.html\\'"       . web-mode)
+   ("\\.htm\\'"        . web-mode))
+
   :custom
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
   (setq file-name-handler-alist nil)
@@ -179,12 +192,6 @@
   (exwm-systemtray-enable)
   (exwm-randr-enable)
   :config
-  (add-hook 'exwm-update-class-hook
-            (lambda ()
-		(exwm-workspace-rename-buffer exwm-class-name)))
-  (add-hook 'exwm-update-title-hook
-            (lambda ()
-		(exwm-workspace-rename-buffer exwm-title)))
   (defun efs/configure-window-by-class ()
     (interactive)
     (pcase (buffer-name)
@@ -207,6 +214,7 @@
     (start-process-shell-command "" nil  "shepherd")
     (eshell))
 
+  (setq exwm-layout-show-all-buffers t)
   (setq exwm-input-global-keys
         `(([s-print] . desktop-environment-screenshot-part)
           ([s-escape] . desktop-environment-lock-screen)
@@ -236,6 +244,10 @@
                           (exwm-workspace-switch-create ,i))))
                     (number-sequence 0 9))))
 
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+              (exwm-workspace-rename-buffer exwm-class-name)))
+
 (defun efs/exwm-change-screen-hook ()
     (let ((xrandr-output-regexp "\n\\([^ ]+\\) connected ")
           default-output)
@@ -253,6 +265,15 @@
 	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
+(use-package helm-exwm
+  :after helm
+  :commands (helm-exwm)
+  :config
+  (setq helm-exwm-emacs-buffers-source (helm-exwm-build-emacs-buffers-source))
+  (setq helm-exwm-source (helm-exwm-build-source))
+  (setq helm-mini-default-sources `(helm-exwm-emacs-buffers-source
+                                    helm-exwm-source
+				    helm-source-recentf)))
 (use-package async
   :after bytecomp
   :hook ((after-init . async-bytecomp-package-mode)
@@ -266,14 +287,13 @@
   :after exwm
   :straight t
   :init (helm-mode)
-  :bind (("C-x b" . 'helm-mini)
-	 ("C-x f" . 'helm-find-files))
+  :bind (("C-x f" . 'helm-find-files))
   :config
   (require 'helm-config)
 
   (define-key global-map [remap find-file] 'helm-find-files)
   (define-key global-map [remap occur] 'helm-occur)
-  (define-key global-map [remap list-buffers] 'helm-buffers-list)
+  (define-key global-map [remap list-buffers] 'helm-mini)
   (define-key global-map [remap dabbrev-expand] 'helm-dabbrev)
   (define-key global-map [remap execute-extended-command] 'helm-M-x)
   (global-set-key (kbd "M-x") 'helm-M-x)
@@ -371,8 +391,9 @@
   :straight (:type git :host github :repo "seagle0128/doom-modeline")
   :hook (after-init . doom-modeline-mode)
   :config
-  (setq doom-modeline-height 25)
   (setq doom-modeline-mu4e t)
+  (setq doom-modeline-height 25)
+  (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
   (setq doom-modeline-vcs-max-length 32))
 
@@ -475,9 +496,68 @@
   (setq auto-mode-alist
 	(cons '("\\.el\\'" . flycheck-mode) auto-mode-alist)))
 
+(use-package web-mode
+  :custom
+  (web-mode-indent-style 4)
+  (css-indent-offset 4)
+  (web-mode-markup-indent-offset 4)
+  (web-mode-engines-alist '(("django" . "\\.html\\'")))
+  :custom-face
+  (web-mode-block-string-face ((t (:inherit font-lock-string-face))))
+  (web-mode-html-attr-value-face ((t (:inherit font-lock-string-face :foreground nil))))
+  (web-mode-current-element-highlight-face ((t (:inherit highlight))))
+  :mode
+  (("\\.phtml\\'"      . web-mode)
+   ("\\.tpl\\.php\\'"  . web-mode)
+   ("\\.xml\\'"        . web-mode)
+   ("\\.html\\'"       . web-mode)
+   ("\\.htm\\'"        . web-mode))
+  :hook
+  (web-mode . web-mode-toggle-current-element-highlight))
+
+(use-package json-mode
+  :mode ("\\.json\\'" . json-mode))
+(use-package json-navigator
+  :commands json-navigator-navigate-region)
+
+(use-package sudo-edit
+  :bind*
+  (("C-x e" . sudo-edit-find-file))
+  :commands sudo-edit)
+
+(use-package go-translate
+  :straight (:host github :repo "lorniu/go-translate")
+  (("C-x t w" . gts-do-translate))
+  :bind*
+  :config
+  (setq gts-translate-list '(("en" "uk") ("uk" "en")))
+  (setq gts-default-translator
+      (gts-translator
+       :picker (gts-prompt-picker :single t)
+       :engines (list (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com"))
+       :render (gts-buffer-render))))
+
+(use-package gif-screencast
+  :straight (:host gitlab :repo "ambrevar/emacs-gif-screencast")
+  :bind
+  ( :map gif-screencast-mode-map
+    ("<f8>". gif-screencast-toggle-pause)
+    ("<f9>". gif-screencast-stop)))
+
+(use-package emojify
+  :commands emojify-mode)
+
 (use-package slack
   :straight (:type git :host github :repo "isamert/emacs-slack" :branch "fix-curl-downloader")
   :commands (slack-start)
+  :hook
+  (slack-message-buffer-mode . (lambda () (setq-local truncate-lines nil)))
+  (slack-message-buffer-mode . (lambda () (setq-local olivetti-body-width 80)))
+  :custom-face
+  (slack-preview-face ((t (:inherit (fixed-pitch shadow org-block) :extend nil))))
+  :custom
+  (slack-buffer-emojify t)
+  (slack-alert-icon (expand-file-name "static/slack/icon.png"))
   :config
   (slack-register-team
    :name "atwix"
@@ -489,11 +569,11 @@
             :host "atwix.slack.com"
             :user "cookie" :type 'netrc :max 1)
    :subscribed-channels '((general)))
-  (setq slack-buffer-emojify t)
   (setq slack-render-image-p t)
   (setq slack-prefer-current-team t)
   (setq tracking-max-mode-line-entries 0)
   (define-key ctl-x-map "j" #'slack-select-rooms)
+  (define-key ctl-x-map "l" #'slack-select-unread-rooms)
   (define-key slack-mode-map "@"
     (defun endless/slack-message-embed-mention ()
       (interactive)

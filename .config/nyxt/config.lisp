@@ -27,8 +27,8 @@
      (override-map (let ((map (make-keymap "my-override-map")))
                      (define-key map
                          "C-b d" 'delete-buffer
-                         "C-p c" 'copy-password
-                         "C-n c" 'copy-username
+			 "C-p c" 'copy-password
+			 "C-n c" 'copy-username
                          "C-d i" 'open-inspector
                          "C-s" 'query-selection-in-search-engine)
                      map))))
