@@ -18,6 +18,12 @@
 (define-configuration browser
     ((session-restore-prompt :always-restore)))
 
+(setf nyxt/certificate-exception-mode:*default-certificate-exceptions*
+      '("next.atlas.engineer"
+	"alienware.ai"
+	"hi.link"
+	"192.168.8.1"))
+
 (define-configuration web-buffer
   ((default-modes (append *web-buffer-modes* %slot-default%))))
 

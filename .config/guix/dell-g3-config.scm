@@ -10,6 +10,7 @@
  (gnu packages autotools)
  (gnu packages admin)
  (gnu packages mail)
+ (gnu packages usb-modeswitch)
  (gnu services)
  (gnu services pm)
  (gnu services web)
@@ -47,9 +48,19 @@
                 SSLCertificateKeyFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.key\n"))))
 
 
+(define huawei-usb-modem-udev-rule
+  (file->udev-rule "90-huawei-usb-modem-rule.rules"
+             (local-file "udev/60-usb_modeswitch.rules")))
+
 (define %my-desktop-services
   (modify-services
       %desktop-services
+    (udev-service-type
+     config => (udev-configuration
+                (inherit config)
+		(rules (append
+			(udev-configuration-rules config)
+			(list huawei-usb-modem-udev-rule)))))
     (pulseaudio-service-type
      config =>
      (pulseaudio-configuration
@@ -124,6 +135,7 @@
      (specification->package "git")
      (specification->package "mu")
      (specification->package "imagemagick")
+     (specification->package "usb-modeswitch")
      (specification->package "gifsicle")
      (specification->package "offlineimap")
      (specification->package "isync")

@@ -63,9 +63,9 @@
 
 (use-package telega
   :straight (:type git :host github :repo "zevlg/telega.el" branch: "release-0.8.0")
-  :init (add-hook 'telega-load-hook 'telega-mode-line-mode)
   :config
-  (setq telega-mode-line-mode t)
+  (advice-add 'telega :after (lambda (&optional ARG PRED)
+			       (telega-mode-line-mode)))
   (setq telega-server-libs-prefix "~/.guix-profile"))
 
 (use-package restclient
@@ -93,13 +93,7 @@
   (tooltip-mode 0)
   (menu-bar-mode 0)
   (display-time-mode 1)
-  (display-battery-mode 1):mode
-  (("\\.phtml\\'"      . web-mode)
-   ("\\.tpl\\.php\\'"  . web-mode)
-   ("\\.xml\\'"        . web-mode)
-   ("\\.html\\'"       . web-mode)
-   ("\\.htm\\'"        . web-mode))
-
+  (display-battery-mode 1)
   :custom
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
   (setq file-name-handler-alist nil)
@@ -482,6 +476,7 @@
   :straight (:type git :host github :repo "emacs-php/php-mode")
   :config
   (define-key php-mode-map (kbd "<f12>") 'dap-mode)
+  (add-hook 'php-mode-hook 'display-line-numbers-mode)
   (add-hook 'php-mode-hook
             (lambda ()
               (add-hook 'before-save-hook 'php-cs-fixer-before-save)
@@ -492,9 +487,7 @@
   :straight t
   :config
   (add-hook 'js2-mode-hook 'flycheck-mode)
-  (add-hook 'php-mode-hook 'flycheck-mode)
-  (setq auto-mode-alist
-	(cons '("\\.el\\'" . flycheck-mode) auto-mode-alist)))
+  (add-hook 'php-mode-hook 'flycheck-mode))
 
 (use-package web-mode
   :custom
@@ -513,10 +506,14 @@
    ("\\.html\\'"       . web-mode)
    ("\\.htm\\'"        . web-mode))
   :hook
+  (web-mode . display-line-numbers-mode)
   (web-mode . web-mode-toggle-current-element-highlight))
 
 (use-package json-mode
-  :mode ("\\.json\\'" . json-mode))
+  :mode ("\\.json\\'" . (lambda ()
+			  (json-mode)
+			  (display-line-numbers-mode))))
+
 (use-package json-navigator
   :commands json-navigator-navigate-region)
 
@@ -527,8 +524,8 @@
 
 (use-package go-translate
   :straight (:host github :repo "lorniu/go-translate")
-  (("C-x t w" . gts-do-translate))
   :bind*
+    (("C-x t w" . gts-do-translate))
   :config
   (setq gts-translate-list '(("en" "uk") ("uk" "en")))
   (setq gts-default-translator
@@ -550,17 +547,10 @@
 (use-package slack
   :straight (:type git :host github :repo "isamert/emacs-slack" :branch "fix-curl-downloader")
   :commands (slack-start)
-  :hook
-  (slack-message-buffer-mode . (lambda () (setq-local truncate-lines nil)))
-  (slack-message-buffer-mode . (lambda () (setq-local olivetti-body-width 80)))
-  :custom-face
-  (slack-preview-face ((t (:inherit (fixed-pitch shadow org-block) :extend nil))))
-  :custom
-  (slack-buffer-emojify t)
-  (slack-alert-icon (expand-file-name "static/slack/icon.png"))
   :config
   (slack-register-team
    :name "atwix"
+   :modeline-enabled t
    :default t
    :token (auth-source-pick-first-password
            :host "atwix.slack.com"
@@ -569,6 +559,11 @@
             :host "atwix.slack.com"
             :user "cookie" :type 'netrc :max 1)
    :subscribed-channels '((general)))
+  (setq slack-modeline-formatter #'slack-icon-modeline-formatter)
+  (setq slack-alert-icon "/home/nazar/.emacs.d/static/slack/icon.png")
+  (setq slack-enable-global-mode-string t)
+  (setq slack-modeline-count-only-subscribed-channel nil)
+  (setq slack-buffer-emojify t)
   (setq slack-render-image-p t)
   (setq slack-prefer-current-team t)
   (setq tracking-max-mode-line-entries 0)
@@ -579,12 +574,36 @@
       (interactive)
       (call-interactively #'slack-message-embed-mention)
       (insert " ")))
-  (define-key slack-mode-map (kbd "C-c C-d")
-    #'slack-message-delete)
   (define-key slack-mode-map (kbd "C-c C-e")
     #'slack-message-edit)
-  (define-key slack-mode-map (kbd "C-c C-k")
-    #'slack-channel-leave))
+  (defun emacs-mode-line-logo-image ()
+      (find-image
+       (list (list :type 'svg
+		   :file "/home/nazar/.emacs.d/static/slack/Slack_icon_2019.svg"
+                   :scale 1 :ascent 'center
+		   :mask 'heuristic
+                   :height 15))))
+  (defun slack-icon-modeline-formatter (alist)
+    (mapconcat #'(lambda (e)
+                   (let* ((summary (cdr e))
+                          (thread (cdr (cl-assoc 'thread summary)))
+                          (channel (cdr (cl-assoc 'channel summary)))
+                          (thread-has-unreads (car thread))
+                          (channel-has-unreads (car channel))
+                          (has-unreads (or thread-has-unreads
+                                           channel-has-unreads))
+                          (thread-mention-count (cdr thread))
+                          (channel-mention-count (cdr channel))
+			  (count-messages (+ channel-mention-count thread-mention-count)))
+                     (format "%s %s"
+			     (propertize "◀"
+					 'face '(italic telega-blue)
+					 'display (emacs-mode-line-logo-image))
+                             (if (or channel-has-unreads (< 0 count-messages))
+				 (propertize (number-to-string count-messages)
+                                             'face 'slack-modeline-channel-has-unreads-face)
+                               0))))
+               alist "")))
 
 (use-package alert
   :straight (:type git :repo "jwiegley/alert")
