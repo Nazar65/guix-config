@@ -52,6 +52,10 @@
   (file->udev-rule "90-huawei-usb-modem-rule.rules"
              (local-file "udev/60-usb_modeswitch.rules")))
 
+(define disable-unsued-devices-rule
+  (file->udev-rule "90-disable-invidia-devices.rules"
+             (local-file "udev/70-disable-nvidia-devices.rules")))
+
 (define %my-desktop-services
   (modify-services
       %desktop-services
@@ -60,7 +64,8 @@
                 (inherit config)
 		(rules (append
 			(udev-configuration-rules config)
-			(list huawei-usb-modem-udev-rule)))))
+			(list huawei-usb-modem-udev-rule
+			      disable-unsued-devices-rule)))))
     (pulseaudio-service-type
      config =>
      (pulseaudio-configuration
@@ -243,9 +248,9 @@
 
      (bluetooth-service #:auto-enable? #t)
      (service tlp-service-type
-	      (tlp-configuration
+	      (tlp-configuration	       
+	       (cpu-boost-on-ac? #t)
 	       (tlp-default-mode "BAT")
-	       (usb-autosuspend? #t)
 	       (cpu-scaling-governor-on-ac
 		(list "performance"))
 	       (sched-powersave-on-bat? #t)))
@@ -265,7 +270,10 @@
     %my-desktop-services))
   (kernel-arguments
    '("snd-intel-dspcfg.dsp_driver=1"
-     "modprobe.blacklist=nouveau"))
+     "modprobe.blacklist=nouveau"
+     "modprobe.blacklist=snd_hda_codec"
+     "modprobe.blacklist=snd_hda_code_realtek"
+     "modprobe.blacklist=snd_hda_codec_hdmi"))
   (bootloader
    (bootloader-configuration
     (bootloader grub-efi-bootloader)
