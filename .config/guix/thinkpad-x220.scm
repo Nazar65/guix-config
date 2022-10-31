@@ -52,10 +52,6 @@
   (file->udev-rule "90-huawei-usb-modem-rule.rules"
 		   (local-file "udev/60-usb_modeswitch.rules")))
 
-(define disable-unsued-devices-rule
-  (file->udev-rule "90-disable-invidia-devices.rules"
-		   (local-file "udev/70-disable-nvidia-devices.rules")))
-
 (define %my-desktop-services
   (modify-services
    %desktop-services
@@ -123,6 +119,7 @@
     (specification->package "emacs-exwm")
     (specification->package "libnotify")
     (specification->package "brightnessctl")
+    (specification->package "notification-daemon")
     (specification->package "xrandr")
     (specification->package "pavucontrol")
     (specification->package "password-store")
@@ -168,6 +165,7 @@
     (specification->package "gcc")
     (specification->package "opensmtpd")
     (specification->package "setxkbmap")
+    (specification->package "pulseaudio")
     (specification->package "pulseaudio-equalizer")
     (specification->package "rsync")
     (specification->package "autoconf")
@@ -181,106 +179,106 @@
     (specification->package "redis")
     (specification->package "alsa-utils")
     (specification->package "emacs-desktop-environment")
-    (specification->package "nss-certs"))
-   %base-packages))
+    (specification->package "nss-certs")
+    (specification->package "usb-modeswitch")
+    %base-packages))
 
- (services
-  (append
-   (list
-    (service tor-service-type)
-    (service redis-service-type)
-    (service httpd-service-type
-	     (httpd-configuration
-	      (config
-	       (httpd-config-file
-		(user %wwwuser)
-		(listen '("443"))
-		(modules
-		 (cons*
-		  (httpd-module
-		   (name "rewrite_module")
-		   (file "modules/mod_rewrite.so"))
-		  (httpd-module
-		   (name "ssl_module")
-		   (file "modules/mod_ssl.so"))
-		  (httpd-module
-		   (name "proxy_module")
-		   (file "modules/mod_proxy.so"))
-		  (httpd-module
-		   (name "proxy_fcgi_module")
-		   (file "modules/mod_proxy_fcgi.so"))
-		  (httpd-module
-		   (name "proxy_http_module")
-		   (file "modules/mod_proxy_http.so"))
-		  %default-httpd-modules))
-		(extra-config
-		 (list "\
+  (services
+   (append
+    (list
+     (service tor-service-type)
+     (service redis-service-type)
+     (service httpd-service-type
+	      (httpd-configuration
+	       (config
+		(httpd-config-file
+		 (user %wwwuser)
+		 (listen '("443"))
+		 (modules
+		  (cons*
+		   (httpd-module
+		    (name "rewrite_module")
+		    (file "modules/mod_rewrite.so"))
+		   (httpd-module
+		    (name "ssl_module")
+		    (file "modules/mod_ssl.so"))
+		   (httpd-module
+		    (name "proxy_module")
+		    (file "modules/mod_proxy.so"))
+		   (httpd-module
+		    (name "proxy_fcgi_module")
+		    (file "modules/mod_proxy_fcgi.so"))
+		   (httpd-module
+		    (name "proxy_http_module")
+		    (file "modules/mod_proxy_http.so"))
+		   %default-httpd-modules))
+		 (extra-config
+		  (list "\
 <FilesMatch \\.php$>
     SetHandler \"proxy:unix:"%php-socket-path"|fcgi://localhost/\"
 </FilesMatch>"))))))
-    (service php-fpm-service-type
-	     (php-fpm-configuration
-	      (php php74)
-	      (user %wwwuser)
-	      (group %wwwgroup)
-	      (socket %php-socket-path)
-	      (socket-user %wwwuser)
-	      (socket-group %wwwgroup)
-	      (display-errors "#t")
-	      (php-ini-file %local-php-ini)))
+     (service php-fpm-service-type
+	      (php-fpm-configuration
+	       (php php74)
+	       (user %wwwuser)
+	       (group %wwwgroup)
+	       (socket %php-socket-path)
+	       (socket-user %wwwuser)
+	       (socket-group %wwwgroup)
+	       (display-errors "#t")
+	       (php-ini-file %local-php-ini)))
 
-    (simple-service 'alienware.ai httpd-service-type
-                    (simple-https-website "alienware.ai"
-                                          "/home/nazar/srv"
-					  "/home/nazar/srv/pub"))
-    (service mysql-service-type
-	     (mysql-configuration
-              (socket "/run/mysqld/mysqld.sock")
+     (simple-service 'alienware.ai httpd-service-type
+                     (simple-https-website "alienware.ai"
+                                           "/home/nazar/srv"
+					   "/home/nazar/srv/pub"))
+     (service mysql-service-type
+	      (mysql-configuration
+               (socket "/run/mysqld/mysqld.sock")
+	       (auto-upgrade? "#f")))
 
-	      (auto-upgrade? "#f")))
+     (service opensmtpd-service-type
+              (opensmtpd-configuration
+               (config-file (local-file "my-smtpd.conf"))))
 
-    (service opensmtpd-service-type
-             (opensmtpd-configuration
-              (config-file (local-file "my-smtpd.conf"))))
+     (service ladspa-service-type
+              (ladspa-configuration (plugins (list swh-plugins))))
 
-    (service ladspa-service-type
-             (ladspa-configuration (plugins (list swh-plugins))))
+     (bluetooth-service #:auto-enable? #t)
+     (service tlp-service-type
+	      (tlp-configuration
+	       (cpu-boost-on-ac? #t)
+	       (tlp-default-mode "BAT")
+	       (cpu-scaling-governor-on-ac
+		(list "performance"))
+	       (sched-powersave-on-bat? #t)))
+     (set-xorg-configuration
+      (xorg-configuration
+       (extra-config (list (string-join
+	                    '("Section \"InputClass\""
+                              "Identifier \"touchpad\""
+                              "Driver \"libinput\""
+                              "MatchIsTouchpad \"on\""
+                              "Option \"DisableWhileTyping\" \"on\""
+                              "Option \"Tapping\" \"1\""
+                              "Option \"NaturalScrolling\" \"1\""
+                              "Option \"Emulate3Buttons\" \"yes\""
+                              "EndSection") "\n")))
+       (keyboard-layout keyboard-layout))))
+    %my-desktop-services))
 
-    (bluetooth-service #:auto-enable? #t)
-    (service tlp-service-type
-	     (tlp-configuration	       
-	      (cpu-boost-on-ac? #t)
-	      (tlp-default-mode "BAT")
-	      (cpu-scaling-governor-on-ac
-	       (list "performance"))
-	      (sched-powersave-on-bat? #t)))
-    (set-xorg-configuration
-     (xorg-configuration
-      (extra-config (list (string-join
-	                   '("Section \"InputClass\""
-                             "Identifier \"touchpad\""
-                             "Driver \"libinput\""
-                             "MatchIsTouchpad \"on\""
-                             "Option \"DisableWhileTyping\" \"on\""
-                             "Option \"Tapping\" \"1\""
-                             "Option \"NaturalScrolling\" \"1\""
-                             "Option \"Emulate3Buttons\" \"yes\""
-                             "EndSection") "\n")))
-      (keyboard-layout keyboard-layout))))
-   %my-desktop-services))
- 
- (bootloader
-  (bootloader-configuration
-   (bootloader grub-bootloader)
-   (target "/dev/sda")
-   (keyboard-layout keyboard-layout)))
- (swap-devices
-  (list (uuid "5824cf68-2a5d-4d64-8119-c6657eb22f8f")))
- (file-systems
-  (cons* (file-system
-          (mount-point "/")
-          (device
-           (uuid "721c4c11-c37c-478a-9d10-f81f27302eef"
-                 'ext4))
-          (type "ext4"))
-         %base-file-systems)))
+  (bootloader
+   (bootloader-configuration
+    (bootloader grub-bootloader)
+    (target "/dev/sda")
+    (keyboard-layout keyboard-layout)))
+  (swap-devices
+   (list (uuid "5824cf68-2a5d-4d64-8119-c6657eb22f8f")))
+  (file-systems
+   (cons* (file-system
+           (mount-point "/")
+           (device
+            (uuid "721c4c11-c37c-478a-9d10-f81f27302eef"
+                  'ext4))
+           (type "ext4"))
+          %base-file-systems)))
