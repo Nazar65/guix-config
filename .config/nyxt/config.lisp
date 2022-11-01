@@ -18,6 +18,10 @@
 (define-configuration browser
     ((session-restore-prompt :always-restore)))
 
+(define-configuration nyxt/hint-mode:hint-mode
+    ((nyxt/hint-mode:fit-to-prompt-p t)
+     (nyxt/hint-mode:show-hint-scope-p t)))
+
 (setf nyxt/certificate-exception-mode:*default-certificate-exceptions*
       '("next.atlas.engineer"
 	"alienware.ai"
@@ -27,16 +31,19 @@
 (define-configuration web-buffer
   ((default-modes (append *web-buffer-modes* %slot-default%))))
 
+(define-nyxt-user-system-and-load "nyxt-user/search-engines"
+  :depends-on (:nx-search-engines) :components ("search-engines.lisp"))
+
 (define-configuration buffer
     ((smooth-scrolling nil)
      (search-always-auto-complete-p nil)
      (override-map (let ((map (make-keymap "my-override-map")))
                      (define-key map
                          "C-b d" 'delete-buffer
+			 "M-s" 'query-text-in-search-engine
 			 "C-p c" 'copy-password
 			 "C-n c" 'copy-username
-                         "C-d i" 'open-inspector
-                         "C-s" 'query-selection-in-search-engine)
+                         "C-d i" 'open-inspector)
                      map))))
 
 (define-configuration nyxt/autofill-mode:autofill-mode
