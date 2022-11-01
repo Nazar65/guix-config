@@ -115,7 +115,6 @@
   (setq nxml-child-indent 4 nxml-attribute-indent 4)
   (setq desktop-path '("~/.emacs.d/" "~" "."))
   (global-unset-key "\C-z")
-  (global-set-key (kbd "C-x p") #'proced)
   (global-set-key "\C-z" 'advertised-undo))
 
 (use-package tramp
@@ -156,10 +155,12 @@
 (use-package proceed
   :straight (:type built-in)
   :no-require t
-  :hook (add-hook 'proced-mode-hook 'proced-settings)
-  :config
-  (defun proced-settings ()
-    (proced-toggle-auto-update)))
+  :hook (add-hook 'proced-mode-hook 'proced-settings))
+
+(defun proced-settings ()
+  (global-set-key (kbd "C-x p") #'proced)
+  (setq-default proced-filter 'all)
+  (proced-toggle-auto-update))
 
 (use-package custom
   :straight (:type built-in)
@@ -219,11 +220,11 @@
           ([s-up] . windmove-up)
           ([s-down] . windmove-down)
 	  ([?\s-.] . (lambda ()
-			  (interactive)
-			  (bluetooth/switch-profile "a2dp_sink")))
+		       (interactive)
+		       (bluetooth/switch-profile "a2dp_sink")))
 	  ([?\s-,] . (lambda ()
-			  (interactive)
-			  (bluetooth/switch-profile "handsfree_head_unit")))
+		       (interactive)
+		       (bluetooth/switch-profile "handsfree_head_unit")))
           ([?\s-&] . (lambda (command)
                        (interactive (list (read-shell-command "$ ")))
                        (start-process-shell-command command nil command)))
@@ -240,7 +241,7 @@
             (lambda ()
               (exwm-workspace-rename-buffer exwm-class-name)))
 
-(defun efs/exwm-change-screen-hook ()
+  (defun efs/exwm-change-screen-hook ()
     (let ((xrandr-output-regexp "\n\\([^ ]+\\) connected ")
           default-output)
       (with-temp-buffer
@@ -250,10 +251,10 @@
         (setq default-output (match-string 1))
         (forward-line)
         (if (not (re-search-forward xrandr-output-regexp nil 'noerror))
-	    (call-process "xrandr" nil nil nil "--output" default-output "--auto")
+	    (call-process "xrandr" nil nil nil "--output" default-output "--auto" "--current")
           (call-process
            "xrandr" nil nil nil
-           "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
+           "--output" (match-string 1) "--primary" "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
@@ -385,6 +386,10 @@
   :straight (:type git :host github :repo "seagle0128/doom-modeline")
   :hook (after-init . doom-modeline-mode)
   :config
+  (with-eval-after-load "doom-modeline"
+    (doom-modeline-def-modeline 'main
+      '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+      '(objed-state lsp vcs major-mode persp-name grip gnus github debug repl minor-modes input-method indent-info checker process irc mu4e misc-info battery time "    ")))
   (setq doom-modeline-mu4e t)
   (setq doom-modeline-height 25)
   (setq doom-modeline-buffer-encoding nil)
@@ -525,14 +530,14 @@
 (use-package go-translate
   :straight (:host github :repo "lorniu/go-translate")
   :bind*
-    (("C-x t w" . gts-do-translate))
+  (("C-x t w" . gts-do-translate))
   :config
   (setq gts-translate-list '(("en" "uk") ("uk" "en")))
   (setq gts-default-translator
-      (gts-translator
-       :picker (gts-prompt-picker :single t)
-       :engines (list (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com"))
-       :render (gts-buffer-render))))
+        (gts-translator
+         :picker (gts-prompt-picker :single t)
+         :engines (list (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com"))
+         :render (gts-buffer-render))))
 
 (use-package gif-screencast
   :straight (:host gitlab :repo "ambrevar/emacs-gif-screencast")
@@ -577,12 +582,12 @@
   (define-key slack-mode-map (kbd "C-c C-e")
     #'slack-message-edit)
   (defun emacs-mode-line-logo-image ()
-      (find-image
-       (list (list :type 'svg
-		   :file "/home/nazar/.emacs.d/static/slack/Slack_icon_2019.svg"
-                   :scale 1 :ascent 'center
-		   :mask 'heuristic
-                   :height 15))))
+    (find-image
+     (list (list :type 'svg
+		 :file "/home/nazar/.emacs.d/static/slack/Slack_icon_2019.svg"
+                 :scale 1 :ascent 'center
+		 :mask 'heuristic
+                 :height 15))))
   (defun slack-icon-modeline-formatter (alist)
     (mapconcat #'(lambda (e)
                    (let* ((summary (cdr e))
@@ -595,7 +600,7 @@
                           (thread-mention-count (cdr thread))
                           (channel-mention-count (cdr channel))
 			  (count-messages (+ channel-mention-count thread-mention-count)))
-                     (format "%s %s"
+                     (format " %s %s "
 			     (propertize "◀"
 					 'face '(italic telega-blue)
 					 'display (emacs-mode-line-logo-image))
@@ -631,7 +636,7 @@
   :config
   (add-hook 'before-save-hook #'js2-before-save-hook)
   (add-hook 'js2-mode-hook 'lsp)
-    (setq auto-mode-alist
+  (setq auto-mode-alist
 	(cons '("\\.js\\'" . js2-mode) auto-mode-alist)))
 
 (defun js2-before-save-hook ()

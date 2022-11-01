@@ -11,16 +11,16 @@
  (gnu packages admin)
  (gnu packages mail)
  (gnu packages usb-modeswitch)
- (gnu services)
+ (gnu services databases)
  (gnu services pm)
  (gnu services web)
  (gnu services mcron)
  (gnu system setuid)
  (gnu services sound)
- (gnu services databases)
+ (gnu services docker)
  (gnu services mail)
  (gnu services shepherd))
-(use-service-modules base dbus desktop networking xorg)
+(use-service-modules base dbus desktop databases networking xorg)
 
 (define %wwwuser "nazar")
 (define %wwwgroup "httpd")
@@ -139,6 +139,8 @@
      (specification->package "playerctl")
      (specification->package "git")
      (specification->package "mu")
+     (specification->package "docker")
+     (specification->package "docker-cli")
      (specification->package "imagemagick")
      (specification->package "usb-modeswitch")
      (specification->package "gifsicle")
@@ -155,12 +157,11 @@
      (specification->package "git")
      (specification->package "network-manager")
      (specification->package "httpd")
-     (specification->package "mysql")
      (specification->package "scrot")
      (specification->package "file")
      (specification->package "ly")
+     (specification->package "bluez")
      (specification->package "speedtest-cli")
-     (specification->package "emacs-telega")
      (specification->package "font-gnu-freefont")
      (specification->package "font-gnu-unifont")
      (specification->package "tdlib")
@@ -188,6 +189,7 @@
    (append
     (list
      (service tor-service-type)
+     (service docker-service-type)
      (service redis-service-type)
      (service httpd-service-type
 	      (httpd-configuration
@@ -236,7 +238,8 @@
      (service mysql-service-type
 	      (mysql-configuration
                (socket "/run/mysqld/mysqld.sock")
-               (extra-content "datadir=/warehouse/databases")
+               (extra-content (string-join
+                               '("datadir=/warehouse/databases") "\n"))
 	       (auto-upgrade? "#f")))
 
      (service opensmtpd-service-type
@@ -248,12 +251,12 @@
 
      (bluetooth-service #:auto-enable? #t)
      (service tlp-service-type
-	      (tlp-configuration	       
+	      (tlp-configuration
 	       (cpu-boost-on-ac? #t)
 	       (tlp-default-mode "BAT")
 	       (cpu-scaling-governor-on-ac
 		(list "performance"))
-	       (sched-powersave-on-bat? #t)))
+               (sched-powersave-on-bat? #t)))
      (set-xorg-configuration
       (xorg-configuration
        (extra-config (list (string-join
@@ -271,8 +274,6 @@
   (kernel-arguments
    '("snd-intel-dspcfg.dsp_driver=1"
      "modprobe.blacklist=nouveau"
-     "modprobe.blacklist=snd_hda_codec"
-     "modprobe.blacklist=snd_hda_code_realtek"
      "modprobe.blacklist=snd_hda_codec_hdmi"))
   (bootloader
    (bootloader-configuration
