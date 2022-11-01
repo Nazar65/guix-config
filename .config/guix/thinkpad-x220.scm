@@ -60,8 +60,7 @@
                (inherit config)
 	       (rules (append
 		       (udev-configuration-rules config)
-		       (list huawei-usb-modem-udev-rule
-			     disable-unsued-devices-rule)))))
+		       (list huawei-usb-modem-udev-rule)))))
    (pulseaudio-service-type
     config =>
     (pulseaudio-configuration
@@ -180,7 +179,7 @@
     (specification->package "alsa-utils")
     (specification->package "emacs-desktop-environment")
     (specification->package "nss-certs")
-    (specification->package "usb-modeswitch")
+    (specification->package "usb-modeswitch"))
     %base-packages))
 
   (services

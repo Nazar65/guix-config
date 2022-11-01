@@ -1,5 +1,0 @@
-# Remove NVIDIA Audio devices, if present
-ACTION=="add", SUBSYSTEM=="pci", ENV{ID_VENDOR_FROM_DATABASE}=="NVIDIA Corporation", ENV{PCI_CLASS}=="40300", ATTR{remove}="1"
-
-# Remove NVIDIA VGA/3D controller
-ACTION=="add", SUBSYSTEM=="pci", ENV{ID_VENDOR_FROM_DATABASE}=="NVIDIA Corporation", ENV{PCI_CLASS}=="30000", ATTR{remove}="1"
