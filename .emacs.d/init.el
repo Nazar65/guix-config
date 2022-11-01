@@ -212,10 +212,8 @@
   (setq exwm-input-global-keys
         `(([s-print] . desktop-environment-screenshot-part)
           ([s-escape] . desktop-environment-lock-screen)
-          ([XF86MonBrightnessDown] . desktop-environment-brightness-decrement)
-          ([XF86MonBrightnessUp] . desktop-environment-brightness-increment)
-          ([XF86AudioRaiseVolume] . desktop-environment-volume-increment)
-          ([XF86AudioLowerVolume] . desktop-environment-volume-decrement)
+          ([s-f8] . desktop-environment-brightness-decrement)
+          ([s-f9] . desktop-environment-brightness-increment)
           ([s-left] . windmove-left)
           ([s-right] . windmove-right)
           ([s-up] . windmove-up)
@@ -276,6 +274,8 @@
 (use-package gcmh
   :init
   (gcmh-mode 1))
+
+(use-package command-log-mode)
 
 (use-package helm
   :after exwm
