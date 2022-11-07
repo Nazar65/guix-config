@@ -1,2 +1,3 @@
 alias php php -c ~/.config/php/php.ini $*
+alias magento-cloud ~/.magento-cloud/bin/magento-cloud $*
 alias switch-instance rm -rf ~/srv && mkdir ~/srv && ln -s ~/Projects/atwix/$1/* ~/srv/ && ls -l ~/srv

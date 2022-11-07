@@ -43,6 +43,7 @@
                     AllowOverride All
                     Require all granted
                 </Directory>
+                LimitRequestFieldSize 20000
                 SSLEngine on
                 SSLCertificateFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.crt
                 SSLCertificateKeyFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.key\n"))))
@@ -131,7 +132,6 @@
     (specification->package "pinentry")
     (specification->package "ripgrep")
     (specification->package "icecat")
-    (specification->package "nyxt-3")
     (specification->package "playerctl")
     (specification->package "git")
     (specification->package "mu")
@@ -165,11 +165,14 @@
     (specification->package "opensmtpd")
     (specification->package "setxkbmap")
     (specification->package "pulseaudio")
-    (specification->package "pulseaudio-equalizer")
     (specification->package "rsync")
+    (specification->package "tdlib")
     (specification->package "autoconf")
     (specification->package "notification-daemon")
     (specification->package "php74")
+    (specification->package "gcc")
+    (specification->package "glibc")
+    (specification->package "binutils")
     (specification->package "elasticsearch")
     (specification->package "phpfixer")
     (specification->package "xdebug3")
@@ -179,6 +182,7 @@
     (specification->package "alsa-utils")
     (specification->package "emacs-desktop-environment")
     (specification->package "nss-certs")
+    (specification->package "xdebug3")
     (specification->package "usb-modeswitch"))
     %base-packages))
 
@@ -267,17 +271,20 @@
     %my-desktop-services))
 
   (bootloader
-   (bootloader-configuration
-    (bootloader grub-bootloader)
-    (target "/dev/sda")
-    (keyboard-layout keyboard-layout)))
-  (swap-devices
-   (list (uuid "5824cf68-2a5d-4d64-8119-c6657eb22f8f")))
+    (bootloader-configuration
+      (bootloader grub-bootloader)
+      (target "/dev/sda")
+      (keyboard-layout keyboard-layout)))
+  (mapped-devices
+    (list (mapped-device
+            (source
+              (uuid "f8ebc0ab-ae53-4945-856a-ced17cfcdb5e"))
+            (target "cryptroot")
+            (type luks-device-mapping))))
   (file-systems
-   (cons* (file-system
-           (mount-point "/")
-           (device
-            (uuid "721c4c11-c37c-478a-9d10-f81f27302eef"
-                  'ext4))
-           (type "ext4"))
-          %base-file-systems)))
+    (cons* (file-system
+             (mount-point "/")
+             (device "/dev/mapper/cryptroot")
+             (type "ext4")
+             (dependencies mapped-devices))
+           %base-file-systems)))
