@@ -61,13 +61,6 @@
 (use-package bluetooth
   :straight (:type git :host github :repo "emacs-straight/bluetooth"))
 
-(use-package telega
-  :straight (:type git :host github :repo "zevlg/telega.el" branch: "release-0.8.0")
-  :config
-  (advice-add 'telega :after (lambda (&optional ARG PRED)
-			       (telega-mode-line-mode)))
-  (setq telega-server-libs-prefix "~/.guix-profile"))
-
 (use-package restclient
   :straight (:type git :host github :repo "pashky/restclient.el"))
 
@@ -602,7 +595,6 @@
 			  (count-messages (+ channel-mention-count thread-mention-count)))
                      (format " %s %s "
 			     (propertize "◀"
-					 'face '(italic telega-blue)
 					 'display (emacs-mode-line-logo-image))
                              (if (or channel-has-unreads (< 0 count-messages))
 				 (propertize (number-to-string count-messages)

@@ -43,7 +43,6 @@
                     AllowOverride All
                     Require all granted
                 </Directory>
-                LimitRequestFieldSize 20000
                 SSLEngine on
                 SSLCertificateFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.crt
                 SSLCertificateKeyFile /home/nazar/.dotfiles/.config/guix/certs/" domain "/mysitename.key\n"))))
@@ -156,7 +155,6 @@
     (specification->package "file")
     (specification->package "ly")
     (specification->package "speedtest-cli")
-    (specification->package "emacs-telega")
     (specification->package "font-gnu-freefont")
     (specification->package "font-gnu-unifont")
     (specification->package "tdlib")
@@ -269,6 +267,8 @@
                               "EndSection") "\n")))
        (keyboard-layout keyboard-layout))))
     %my-desktop-services))
+  (kernel-arguments
+   '("intel_idle.max_cstate=4"))
 
   (bootloader
     (bootloader-configuration
