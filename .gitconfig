@@ -1,0 +1,6 @@
+[user]
+	name = Nazar Klovanych
+	email = nazarn96@gmail.com
+[credential]
+    helper = store --file /home/nazar/.git-credentials
+    helper = cache --timeout 30000
