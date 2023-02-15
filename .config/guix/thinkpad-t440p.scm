@@ -1,34 +1,40 @@
-(use-modules
- (gnu)
- (guix)
- (guix utils)
- (guix packages)
- (packages composer)
- (packages php74)
- (gnu packages audio)
- (gnu packages pulseaudio)
- (gnu packages autotools)
- (gnu packages admin)
- (gnu packages mail)
- (gnu packages usb-modeswitch)
- (gnu services)
- (gnu services pm)
- (gnu services web)
- (gnu services mcron)
- (gnu system setuid)
- (gnu services sound)
- (gnu services databases)
- (gnu services mail)
- (gnu services shepherd))
+;; This "home-environment" file can be passed to 'guix home reconfigure'
+;; to reproduce the content of your profile.  This is "symbolic": it only
+;; specifies package names.  To reproduce the exact same profile, you also
+;; need to capture the channels being used, as returned by "guix describe".
+;; See the "Replicating Guix" section in the manual.
+
+(define-module (guix thinkpad-t440p)
+  #:use-module (gnu)
+  #:use-module (guix)
+  #:use-module (guix utils)
+  #:use-module (guix packages)
+  #:use-module (packages composer)
+  #:use-module (packages php)
+  #:use-module (gnu packages audio)
+  #:use-module (gnu packages pulseaudio)
+  #:use-module (gnu packages admin)
+  #:use-module (gnu packages mail)
+  #:use-module (gnu packages web)
+  #:use-module (gnu system setuid)
+  #:use-module (gnu services pm)
+  #:use-module (gnu services web)
+  #:use-module (gnu services sound)
+  #:use-module (gnu services databases)
+  #:use-module (gnu services mail)
+  #:use-module (gnu services shepherd)
+  #:use-module (guix packages))
+
 (use-service-modules base dbus desktop networking xorg)
 
 (define %wwwuser "nazar")
+(define %active-php-package php74)
 (define %wwwgroup "httpd")
 (define %local-php-ini "/home/nazar/.config/php/php.ini")
 (define %php-socket-path
   (string-append "/var/run/php"
 		 (version-major
-		  (package-version php74))
+		  (package-version %active-php-package))
 		 "-fpm.sock"))
 
 (define (simple-https-website domain directory documentRoot)
@@ -51,6 +57,9 @@
 (define huawei-usb-modem-udev-rule
   (file->udev-rule "90-huawei-usb-modem-rule.rules"
 		   (local-file "udev/60-usb_modeswitch.rules")))
+
+(define %php-package (string-append "php@"
+				     (package-version %active-php-package)))
 
 (define %my-desktop-services
   (modify-services
@@ -122,22 +131,14 @@
     (specification->package "xrandr")
     (specification->package "pavucontrol")
     (specification->package "password-store")
-    (specification->package "gst-plugins-ugly")
-    (specification->package "gst-plugins-good")
-    (specification->package "gst-plugins-base")
-    (specification->package "gst-plugins-bad")
-    (specification->package "gst-libav")
     (specification->package "gnupg")
-    (specification->package "pinentry")
     (specification->package "ripgrep")
     (specification->package "icecat")
-    (specification->package "playerctl")
     (specification->package "git")
     (specification->package "mu")
     (specification->package "imagemagick")
-    (specification->package "usb-modeswitch")
     (specification->package "gifsicle")
-    (specification->package "offlineimap")
+    (specification->package "offlineimap3")
     (specification->package "isync")
     (specification->package "msmtp")
     (specification->package "the-silver-searcher")
@@ -153,36 +154,27 @@
     (specification->package "mysql")
     (specification->package "scrot")
     (specification->package "file")
-    (specification->package "ly")
     (specification->package "speedtest-cli")
-    (specification->package "font-gnu-freefont")
-    (specification->package "font-gnu-unifont")
     (specification->package "tdlib")
-    (specification->package "make")
-    (specification->package "gcc")
     (specification->package "opensmtpd")
     (specification->package "setxkbmap")
     (specification->package "pulseaudio")
     (specification->package "rsync")
-    (specification->package "tdlib")
-    (specification->package "autoconf")
     (specification->package "notification-daemon")
-    (specification->package "php74")
-    (specification->package "gcc")
-    (specification->package "glibc")
+    (specification->package %php-package)
     (specification->package "binutils")
     (specification->package "elasticsearch")
     (specification->package "phpfixer")
-    (specification->package "xdebug3")
     (specification->package "composer")
     (specification->package "openssh")
     (specification->package "redis")
+    (specification->package "usb-modeswitch")
     (specification->package "alsa-utils")
     (specification->package "emacs-desktop-environment")
     (specification->package "nss-certs")
     (specification->package "xdebug3")
-    (specification->package "usb-modeswitch"))
-    %base-packages))
+    (specification->package "xinput"))
+   %base-packages))
 
   (services
    (append
@@ -220,7 +212,7 @@
 </FilesMatch>"))))))
      (service php-fpm-service-type
 	      (php-fpm-configuration
-	       (php php74)
+	       (php %active-php-package)
 	       (user %wwwuser)
 	       (group %wwwgroup)
 	       (socket %php-socket-path)
@@ -267,8 +259,6 @@
                               "EndSection") "\n")))
        (keyboard-layout keyboard-layout))))
     %my-desktop-services))
-  (kernel-arguments
-   '("intel_idle.max_cstate=4"))
 
   (bootloader
     (bootloader-configuration

@@ -206,8 +206,6 @@
   (setq exwm-input-global-keys
         `(([s-print] . desktop-environment-screenshot-part)
           ([s-escape] . desktop-environment-lock-screen)
-          ([s-f8] . desktop-environment-brightness-decrement)
-          ([s-f9] . desktop-environment-brightness-increment)
           ([s-left] . windmove-left)
           ([s-right] . windmove-right)
           ([s-up] . windmove-up)
@@ -382,7 +380,7 @@
   (with-eval-after-load "doom-modeline"
     (doom-modeline-def-modeline 'main
       '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-      '(objed-state lsp vcs major-mode persp-name grip gnus github debug repl minor-modes input-method indent-info checker process irc mu4e misc-info battery time "    ")))
+      '(objed-state lsp vcs major-mode persp-name grip gnus github debug repl minor-modes input-method indent-info checker process irc mu4e misc-info battery time "  ")))
   (setq doom-modeline-mu4e t)
   (setq doom-modeline-height 25)
   (setq doom-modeline-buffer-encoding nil)
