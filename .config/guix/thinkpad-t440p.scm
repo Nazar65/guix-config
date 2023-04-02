@@ -173,6 +173,8 @@
     (specification->package "emacs-desktop-environment")
     (specification->package "nss-certs")
     (specification->package "xdebug3")
+    (specification->package "cifs-utils")
+    (specification->package "nfs-utils")
     (specification->package "xinput"))
    %base-packages))
 
@@ -207,6 +209,7 @@
 		   %default-httpd-modules))
 		 (extra-config
 		  (list "\
+TimeOut 600
 <FilesMatch \\.php$>
     SetHandler \"proxy:unix:"%php-socket-path"|fcgi://localhost/\"
 </FilesMatch>"))))))
@@ -249,14 +252,16 @@
       (xorg-configuration
        (extra-config (list (string-join
 	                    '("Section \"InputClass\""
-                              "Identifier \"touchpad\""
-                              "Driver \"libinput\""
-                              "MatchIsTouchpad \"on\""
-                              "Option \"DisableWhileTyping\" \"on\""
-                              "Option \"Tapping\" \"1\""
-                              "Option \"NaturalScrolling\" \"1\""
-                              "Option \"Emulate3Buttons\" \"yes\""
-                              "EndSection") "\n")))
+                                "Identifier \"Synaptics TM3053-003\""
+                                "Driver \"libinput\""
+                                "MatchIsTouchpad \"on\""
+			        "Option \"Ignore\" \"on\""
+                              "EndSection" "\n"
+			       "Section \"InputClass\""
+				   "Identifier \"TPPS/2 IBM TrackPoint\""
+				   "Option \"AccelSpeed\" \"1\""
+			       "EndSection") "\n"
+			      )))
        (keyboard-layout keyboard-layout))))
     %my-desktop-services))
 

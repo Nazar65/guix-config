@@ -8,6 +8,7 @@
 ;; use mu4e for e-mail in emacs
 (setq mail-user-agent 'mu4e-user-agent)
 
+(setq mu4e-attachment-dir  "~/Downloads/MailAttachments")
 (setq mu4e-drafts-folder "/[Gmail].Drafts")
 (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
 (setq mu4e-trash-folder  "/[Gmail].Trash")
@@ -16,10 +17,10 @@
 (setq mu4e-sent-messages-behavior 'delete)
 
 (setq mu4e-maildir-shortcuts
-    '( (:maildir "/INBOX"              :key ?i)
-       (:maildir "/[Gmail].Sent Mail"  :key ?s)
-       (:maildir "/[Gmail].Trash"      :key ?t)
-       (:maildir "/[Gmail].All Mail"   :key ?a)))
+    '((:maildir "/INBOX"              :key ?i)
+      (:maildir "/[Gmail].Sent Mail"  :key ?s)
+      (:maildir "/[Gmail].Trash"      :key ?t)
+      (:maildir "/[Gmail].All Mail"   :key ?a)))
 
 ;; allow for updating mail using 'U' in the main view:
 (setq mu4e-get-mail-command "offlineimap")

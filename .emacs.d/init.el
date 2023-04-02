@@ -40,7 +40,6 @@
 (use-package em-tramp
   :config
   (add-to-list 'eshell-modules-list 'eshell-tramp)
-  :after emacs
   :straight (:type built-in))
 
 (use-package desktop-environment
@@ -54,6 +53,9 @@
   :config
   (ac-config-default)
   (ac-set-trigger-key "TAB"))
+
+(use-package password-store
+  :straight t)
 
 (use-package ztree
   :straight (:type git :host github :repo "fourier/ztree"))
@@ -69,6 +71,7 @@
   :config (add-to-list 'company-backends 'company-restclient))
 
 (use-package emacs
+  :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)
          ("M-b"     . 'backward-to-word)
          ("C-!"     . 'kill-this-buffer)
@@ -168,7 +171,6 @@
   :straight t)
 
 (use-package exwm
-  :after emacs
   :init
   (require 'exwm)
   (require 'exwm-randr)
@@ -267,21 +269,16 @@
   :init
   (gcmh-mode 1))
 
-(use-package command-log-mode)
-
 (use-package helm
-  :after exwm
-  :straight t
+  :straight (:type git :host github :repo "emacs-helm/helm")
   :init (helm-mode)
-  :bind (("C-x f" . 'helm-find-files))
+  :bind (("C-x f" . 'helm-find-files)
+	 ("C-x p" . 'helm-browse-project)
+	 ("C-s" . 'helm-occur)
+	 ("C-x b" . 'helm-mini)
+	 ("C-x <mouse-movement>" . 'helm-mini)
+	 ("C-x C-b" . 'helm-mini))
   :config
-  (require 'helm-config)
-
-  (define-key global-map [remap find-file] 'helm-find-files)
-  (define-key global-map [remap occur] 'helm-occur)
-  (define-key global-map [remap list-buffers] 'helm-mini)
-  (define-key global-map [remap dabbrev-expand] 'helm-dabbrev)
-  (define-key global-map [remap execute-extended-command] 'helm-M-x)
   (global-set-key (kbd "M-x") 'helm-M-x)
   (global-set-key (kbd "M-y") 'helm-show-kill-ring)
   (setq helm-split-window-in-side-p t
@@ -319,7 +316,7 @@
   :init (projectile-mode)
   :after helm
   :config
-  (defvar projectile-project-folder '("~/Projects/i4/"))
+  (defvar projectile-project-folder '("~/Projects/atwix/"))
   (setq projectile-enable-caching nil
 	projectile-project-search-path projectile-project-folder
 	projectile-globally-ignored-file-suffixes '("#" "~" ".swp" ".o" ".so" ".pyc" ".jar" "*.class")
@@ -359,11 +356,17 @@
   :after doom-modeline
   :straight (:type git :host github :repo "domtronn/all-the-icons.el"))
 
+(use-package org
+  :straight (:type built-in))
+
 (use-package mu4e
   :straight (:type built-in)
   :init (load "~/.emacs.d/mu4e-config.el")
   :config
-  (run-with-timer 0 300 #'mu4e-update-mail-and-index t))
+  (require 'mu4e)
+  (mu4e--init-handlers)
+  (run-with-timer 0 300 #'mu4e-update-mail-and-index t)
+  (mu4e-modeline-mode -1))
 
 (use-package mu4e-alert
   :straight (:type git :host github :repo "iqbalansari/mu4e-alert")
@@ -373,6 +376,7 @@
   (mu4e-alert-set-default-style 'libnotify)
   (mu4e-alert-enable-notifications))
 
+
 (use-package doom-modeline
   :straight (:type git :host github :repo "seagle0128/doom-modeline")
   :hook (after-init . doom-modeline-mode)
@@ -380,7 +384,7 @@
   (with-eval-after-load "doom-modeline"
     (doom-modeline-def-modeline 'main
       '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-      '(objed-state lsp vcs major-mode persp-name grip gnus github debug repl minor-modes input-method indent-info checker process irc mu4e misc-info battery time "  ")))
+      '(objed-state lsp vcs major-mode persp-name grip gnus github debug repl minor-modes input-method indent-info checker process mu4e misc-info battery time "  ")))
   (setq doom-modeline-mu4e t)
   (setq doom-modeline-height 25)
   (setq doom-modeline-buffer-encoding nil)
@@ -422,17 +426,23 @@
         lsp-log-io nil
 	lsp-ui-doc-show-with-cursor t
         lsp-ui-doc-show-with-mouse nil
-        sp-signature-auto-activate nil
+        lsp-signature-auto-activate nil
 	lsp-ui-doc-position 'at-point
         lsp-completion-provider :capf)
-  :hook (php-mode . lsp)
+  :hook
+  (php-mode . lsp)
+  (lsp-ui-mode . (lambda()
+		      (define-key lsp-ui-mode-map (kbd "s-l g") 'lsp-find-definition)
+		      (define-key lsp-ui-mode-map (kbd "s-l r") 'lsp-find-references)
+		      (define-key lsp-ui-mode-map (kbd "s-l <mouse-movement>") 'lsp-find-definition)))
+
   :commands lsp)
 
 (use-package lsp-ui
   :straight (:type git :repo "emacs-lsp/lsp-ui")
   :hook (lsp-mode . lsp-ui-mode)
   :requires lsp-mode flycheck
-  :custom
+  :config
   (setq lsp-ui-doc-enable t
         lsp-ui-doc-delay 0.500))
 
@@ -460,7 +470,6 @@
   (define-key dap-mode-map (kbd "<f9>") 'dap-breakpoint-add)
   (define-key dap-mode-map (kbd "<f11>") 'dap-breakpoint-delete))
 
-;; For csv files
 (use-package csv-mode
   :straight t
   :mode (("\\.[Cc][Ss][Vv]\\'" . csv-mode))
@@ -541,7 +550,7 @@
   :commands emojify-mode)
 
 (use-package slack
-  :straight (:type git :host github :repo "isamert/emacs-slack" :branch "fix-curl-downloader")
+  :straight (:host github :repo "isamert/emacs-slack")
   :commands (slack-start)
   :config
   (slack-register-team
@@ -555,6 +564,10 @@
             :host "atwix.slack.com"
             :user "cookie" :type 'netrc :max 1)
    :subscribed-channels '((general)))
+  (setq slack-log-level 'error)
+  (setq slack-buffer-function 'switch-to-buffer)
+  (setq slack-buffer-function #'switch-to-buffer-other-window)
+  ;; ^ Open slack windows on the right side of the screen
   (setq slack-modeline-formatter #'slack-icon-modeline-formatter)
   (setq slack-alert-icon "/home/nazar/.emacs.d/static/slack/icon.png")
   (setq slack-enable-global-mode-string t)
@@ -598,7 +611,10 @@
 				 (propertize (number-to-string count-messages)
                                              'face 'slack-modeline-channel-has-unreads-face)
                                0))))
-               alist "")))
+               alist ""))
+  (advice-add 'slack-message-notify :before
+	      (lambda(message room team)
+		(play-sound-file "~/.dotfiles/Sounds/Slack-Notification-Tone.au"))))
 
 (use-package alert
   :straight (:type git :repo "jwiegley/alert")
@@ -636,3 +652,5 @@
 
 (provide 'init)
 ;;; init.el ends here
+;; Local Variables:
+;; byte-compile-warnings: (not free-vars)
