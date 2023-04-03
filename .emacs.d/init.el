@@ -236,7 +236,15 @@
 
   (defun efs/exwm-change-screen-hook ()
     (let ((xrandr-output-regexp "\n\\([^ ]+\\) connected ")
+	  (xrandr-output-disconnected-regexp "\n\\([^ ]+\\) disconnected primary")
           default-output)
+
+      (with-temp-buffer
+        (call-process "xrandr" nil t nil)
+        (goto-char (point-min))
+	(if (re-search-forward xrandr-output-disconnected-regexp nil 'noerror)
+	    (call-process "xrandr" nil nil nil "--output" (match-string 1) "--off")))
+      
       (with-temp-buffer
         (call-process "xrandr" nil t nil)
         (goto-char (point-min))
@@ -245,7 +253,8 @@
         (forward-line)
         (if (not (re-search-forward xrandr-output-regexp nil 'noerror))
 	    (call-process "xrandr" nil nil nil "--output" default-output "--auto" "--current")
-          (call-process
+	    (setq exwm-randr-workspace-output-plist (list 0 default-output))
+	  (call-process
            "xrandr" nil nil nil
            "--output" (match-string 1) "--primary" "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
