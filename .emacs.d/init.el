@@ -375,7 +375,8 @@
   (require 'mu4e)
   (mu4e--init-handlers)
   (run-with-timer 0 300 #'mu4e-update-mail-and-index t)
-  (mu4e-modeline-mode -1))
+  (mu4e-modeline-mode -1)
+  (add-hook 'mu4e-main-mode-hook (lambda()  (mu4e-modeline-mode -1))))
 
 (use-package mu4e-alert
   :straight (:type git :host github :repo "iqbalansari/mu4e-alert")
@@ -621,9 +622,13 @@
                                              'face 'slack-modeline-channel-has-unreads-face)
                                0))))
                alist ""))
-  (advice-add 'slack-message-notify :before
+  (advice-add 'slack-message-notify-alert :before
 	      (lambda(message room team)
-		(play-sound-file "~/.dotfiles/Sounds/Slack-Notification-Tone.au"))))
+		(if (slack-message-notify-p message room team)
+		    (async-start
+		     (lambda ()
+		       (play-sound-file "~/.dotfiles/Sounds/Slack-Notification-Tone.au")
+		       'ignore))))))
 
 (use-package alert
   :straight (:type git :repo "jwiegley/alert")
