@@ -48,12 +48,6 @@
   :init
   (desktop-environment-mode))
 
-(use-package auto-complete
-  :straight (:type git :host github :repo "auto-complete/auto-complete")
-  :config
-  (ac-config-default)
-  (ac-set-trigger-key "TAB"))
-
 (use-package password-store
   :straight t)
 
@@ -426,11 +420,34 @@
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
   (setq doom-modeline-vcs-max-length 32))
 
-(use-package company
-  :straight t
+(use-package corfu-popupinfo
+  :straight nil
+  :after corfu
+  :hook (corfu-mode . corfu-popupinfo-mode))
+
+(use-package corfu
+  :straight (:files (:defaults "extensions/*"))
+  :init
+  (global-corfu-mode)
   :config
-  (setq company-idle-delay 0.3)
-  (global-company-mode t))
+  (setq corfu-auto  t
+        corfu-auto-prefix 1
+        corfu-quit-no-match nil
+        corfu-preview-current nil
+        corfu-popupinfo-delay 0.3
+        corfu-popupinfo-max-width 70
+        corfu-popupinfo-max-height 20))
+
+(use-package svg-lib
+  :after kind-icon)
+
+(use-package kind-icon
+  :straight (:type git :host github :repo "/jdtsmith/kind-icon")
+  :after corfu
+  :custom
+  (kind-icon-default-face 'corfu-default)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 ;; PHP settings
 ;; ===============================================
