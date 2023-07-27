@@ -116,7 +116,7 @@
 (use-package tramp
   :straight (:type built-in)
   :config
-  (setq emacs-persistence-directory (expand-file-name "var" user-emacs-directory))
+  (setq emacs-persistence-directory (expand-file-name "var/" user-emacs-directory))
   (let ((dir (expand-file-name "backup" emacs-persistence-directory)))
     (unless (file-directory-p dir)
       (make-directory dir t))
@@ -244,7 +244,7 @@
         (goto-char (point-min))
 	(if (re-search-forward xrandr-output-disconnected-regexp nil 'noerror)
 	    (call-process "xrandr" nil nil nil "--output" (match-string 1) "--off")))
-      
+
       (with-temp-buffer
         (call-process "xrandr" nil t nil)
         (goto-char (point-min))
@@ -299,6 +299,30 @@
 	helm-buffers-fuzzy-matching t
 	helm-recentf-fuzzy-match t
 	helm-autoresize-min-height 20))
+
+(use-package erc
+  :hook
+  (erc-mode . abbrev-mode)
+  (erc-mode . erc-spelling-mode)
+  :config
+  (global-set-key (kbd "s-<f12>") #'connect-libera-irc)
+  (defun connect-libera-irc ()
+    (interactive)
+    (erc-tls :server "irc.libera.chat" :port 6697 :nick "klovanych"))
+  (setq
+   erc-nick "klovanych"
+   erc-user-full-name "Nazar Klovanych"
+   erc-prompt-for-password nil
+   erc-log-channels-directory "~/Messages/ERC"
+   erc-autojoin-channels-alist
+   '(("#emacs"
+      "#guix"
+      "#libreboot"
+      "#org-mode"))
+   erc-modules
+   '(autoaway autojoin button completion fill sound
+              list match menu move-to-prompt netsplit networks noncommands ring stamp track
+              smiley notify notifications)))
 
 (use-package flyspell
   :straight (:type built-in)
@@ -361,12 +385,11 @@
   :config
   (doom-themes-visual-bell-config))
 
-(use-package all-the-icons
-  :after doom-modeline
-  :straight (:type git :host github :repo "domtronn/all-the-icons.el"))
-
 (use-package org
   :straight (:type built-in))
+
+(use-package logview
+  :straight (:type git :host github :repo "doublep/logview"))
 
 (use-package mu4e
   :straight (:type built-in)
@@ -386,6 +409,8 @@
   (mu4e-alert-set-default-style 'libnotify)
   (mu4e-alert-enable-notifications))
 
+(use-package nerd-icons
+  :straight (:type git :host github :repo "rainstormstudio/nerd-icons.el"))
 
 (use-package doom-modeline
   :straight (:type git :host github :repo "seagle0128/doom-modeline")
@@ -424,37 +449,6 @@
   :config
   (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"
         php-cs-fixer-cache-file-path "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.cache"))
-
-(use-package lsp-mode
-  :straight (:type git :repo "emacs-lsp/lsp-mode")
-  :config
-  (setq lsp-prefer-flymake nil
-        lsp-idle-delay 0.500
-        read-process-output-max (* 1024 1024)
-        gc-cons-threshold 100000000
-        lsp-enable-file-watchers nil
-        lsp-log-io nil
-	lsp-ui-doc-show-with-cursor t
-        lsp-ui-doc-show-with-mouse nil
-        lsp-signature-auto-activate nil
-	lsp-ui-doc-position 'at-point
-        lsp-completion-provider :capf)
-  :hook
-  (php-mode . lsp)
-  (lsp-ui-mode . (lambda()
-		      (define-key lsp-ui-mode-map (kbd "s-l g") 'lsp-find-definition)
-		      (define-key lsp-ui-mode-map (kbd "s-l r") 'lsp-find-references)
-		      (define-key lsp-ui-mode-map (kbd "s-l <mouse-movement>") 'lsp-find-definition)))
-
-  :commands lsp)
-
-(use-package lsp-ui
-  :straight (:type git :repo "emacs-lsp/lsp-ui")
-  :hook (lsp-mode . lsp-ui-mode)
-  :requires lsp-mode flycheck
-  :config
-  (setq lsp-ui-doc-enable t
-        lsp-ui-doc-delay 0.500))
 
 (use-package phpunit
   :straight (:type git :host github :repo "nlamirault/phpunit.el")
@@ -527,10 +521,32 @@
 (use-package json-mode
   :mode ("\\.json\\'" . (lambda ()
 			  (json-mode)
+                          (flycheck-mode)
 			  (display-line-numbers-mode))))
 
 (use-package json-navigator
   :commands json-navigator-navigate-region)
+
+(use-package eglot
+  :straight (:host github :repo "joaotavora/eglot")
+  :hook ((php-mode . eglot-ensure)
+         (js2-mode . eglot-ensure)
+         (json-mode . eglot-ensure)
+         (css-mode . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs '(php-mode . ("/home/nazar/lsp-servers/intelephense/node_modules/.bin/intelephense" "--stdio")))
+  (add-to-list 'eglot-server-programs '(json-mode . ("/home/nazar/lsp-servers/json-css-html/node_modules/.bin/vscode-json-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs '(js2-mode . ("/home/nazar/lsp-servers/js-typescript/node_modules/.bin/typescript-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs '(css-mode . ("/home/nazar/lsp-servers/json-css-html/node_modules/.bin/vscode-css-language-server" "--stdio")))
+  (setq eldoc-echo-area-use-multiline-p t)
+  (setq eglot-confirm-server-initiated-edits nil)
+  (setq eglot-extend-to-xref t))
+
+(use-package eldoc-box
+  :straight (:host github :repo "casouri/eldoc-box")
+  :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode)
+  :after eglot)
+
 
 (use-package sudo-edit
   :bind*
@@ -635,6 +651,10 @@
   :commands (alert)
   :config
   (setq alert-default-style 'libnotify))
+
+(use-package forge
+  :after magit
+  :straight (:type git :host github :repo "magit/forge"))
 
 (use-package magit
   :straight (:type git :host github :repo "magit/magit")
