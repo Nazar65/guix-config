@@ -60,10 +60,6 @@
 (use-package restclient
   :straight (:type git :host github :repo "pashky/restclient.el"))
 
-(use-package company-restclient
-  :straight (:type git :host github :repo "iquiw/company-restclient")
-  :config (add-to-list 'company-backends 'company-restclient))
-
 (use-package emacs
   :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)
@@ -84,6 +80,17 @@
   (menu-bar-mode 0)
   (display-time-mode 1)
   (display-battery-mode 1)
+  (defun eos/crm-indicator (args)
+      (cons (format "[CRM%s] %s"
+                    (replace-regexp-in-string
+                     "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                     crm-separator)
+                    (car args))
+            (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'eos/crm-indicator)
+  (setq read-extended-command-predicate
+        #'command-completion-default-include-p)
+  (setq enable-recursive-minibuffers t)
   :custom
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
   (setq file-name-handler-alist nil)
@@ -142,16 +149,6 @@
   (backup-directory-alist '((".*" . "~/.emacs.d/backups/")))
   (auto-save-file-name-transforms '((".*" "~/.emacs.d/backups/" t))))
 
-(use-package proceed
-  :straight (:type built-in)
-  :no-require t
-  :hook (add-hook 'proced-mode-hook 'proced-settings))
-
-(defun proced-settings ()
-  (global-set-key (kbd "C-x p") #'proced)
-  (setq-default proced-filter 'all)
-  (proced-toggle-auto-update))
-
 (use-package custom
   :straight (:type built-in)
   :no-require t
@@ -159,10 +156,6 @@
   (setq custom-file (expand-file-name "~/.emacs.d/custom.el" user-emacs-directory))
   (when (file-exists-p custom-file)
     (load custom-file)))
-
-(use-package geiser-guile
-  :mode (("\\.[Ss][Cc][Mm]\\'" . guix-devel-mode))
-  :straight t)
 
 (use-package exwm
   :init
@@ -254,15 +247,6 @@
 	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
-(use-package helm-exwm
-  :after helm
-  :commands (helm-exwm)
-  :config
-  (setq helm-exwm-emacs-buffers-source (helm-exwm-build-emacs-buffers-source))
-  (setq helm-exwm-source (helm-exwm-build-source))
-  (setq helm-mini-default-sources `(helm-exwm-emacs-buffers-source
-                                    helm-exwm-source
-				    helm-source-recentf)))
 (use-package async
   :after bytecomp
   :hook ((after-init . async-bytecomp-package-mode)
@@ -272,34 +256,68 @@
   :init
   (gcmh-mode 1))
 
-(use-package helm
-  :straight (:type git :host github :repo "emacs-helm/helm")
-  :init (helm-mode)
-  :bind (("C-x f" . 'helm-find-files)
-	 ("C-x p" . 'helm-browse-project)
-	 ("C-s" . 'helm-occur)
-	 ("C-x b" . 'helm-mini)
-	 ("C-x <mouse-movement>" . 'helm-mini)
-	 ("C-x C-b" . 'helm-mini))
+(use-package vertico
+  :straight (vertico :files (:defaults "extensions/*.el"))
+  :init (vertico-mode))
+
+(use-package marginalia
+  :after vertico
+  :init(marginalia-mode)
+  :functions(marginalia-mode)
+  :custom
+  (marginalia-max-relative-age 0)
+  (marginalia-align 'center))
+
+(use-package consult
+  :after vertico
+  :bind (("C-x b"    . consult-buffer)
+         ("C-x p"    . consult-project-buffer)
+         ("C-x K"     . kill-current-buffer)
+         ("C-x C-b"  . ibuffer)
+         ("C-c s r"  . 'consult-ripgrep)
+         ("C-c s g"  . 'consult-grep)
+         ("C-c s i"  . 'consult-git-grep)
+         ("C-c s f"  . 'consult-find))
+  :hook (completion-list-mode . consult-preview-at-point-mode)
   :config
-  (global-set-key (kbd "M-x") 'helm-M-x)
-  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
-  (setq helm-split-window-in-side-p t
-	helm-M-x-fuzzy-match t
-	helm-locate-fuzzy-match t
-	helm-semantic-fuzzy-match t
-	helm-apropos-fuzzy-match t
-	helm-etag-fuzzy-match t
-	helm-buffers-fuzzy-matching t
-	helm-recentf-fuzzy-match t
-	helm-autoresize-min-height 20))
+  (defvar php-source
+    (list :name     "PHP Buffer"
+          :category 'buffer
+          :narrow   ?c
+          :face     'consult-buffer
+          :history  'buffer-name-history
+          :state    #'consult--buffer-state
+          :new
+          (lambda (name)
+            (with-current-buffer (get-buffer-create name)
+              (insert "#+title: " name "\n\n")
+              (php-mode)
+              (consult--buffer-action (current-buffer))))
+          :items
+          (lambda ()
+            (mapcar #'buffer-name
+                    (seq-filter
+                     (lambda (x)
+                       (eq (buffer-local-value 'major-mode x) 'php-mode))
+                     (buffer-list))))))
+
+  (add-to-list 'consult-buffer-sources 'php-source 'append))
+
+(use-package embark
+  :bind (("C-c a" . embark-act))
+  :config
+  (setq embark-action-indicator
+        (lambda (map)
+          (which-key--show-keymap "Embark" map nil nil 'no-paging)
+          #'which-key--hide-popup-ignore-command)
+        embark-become-indicator embark-action-indicator))
 
 (use-package erc
   :hook
   (erc-mode . abbrev-mode)
   (erc-mode . erc-spelling-mode)
+  :bind (("s-<f12>" . #'connect-libera-irc))
   :config
-  (global-set-key (kbd "s-<f12>") #'connect-libera-irc)
   (defun connect-libera-irc ()
     (interactive)
     (erc-tls :server "irc.libera.chat" :port 6697 :nick "klovanych"))
@@ -321,36 +339,6 @@
 (use-package flyspell
   :straight (:type built-in)
   :init (flyspell-mode))
-
-(use-package helm-ag
-  :straight (:type git :host github :repo "emacsorphanage/helm-ag")
-  :config
-  (setq helm-ag-insert-at-point 'word)
-  (define-key projectile-mode-map (kbd "C-c p s s") 'helm-do-ag)
-  (setq helm-ag-base-command "ag --nocolor --nogroup")
-  (setq helm-ag-success-exit-status '(0 2))
-  :after helm)
-
-(use-package helm-projectile
-  :straight t
-  :after helm
-  :hook (projectile-mode . helm-projectile-on)
-  :commands helm-projectile)
-
-;; Projectile mode and extensions
-(use-package projectile
-  :straight t
-  :init (projectile-mode)
-  :after helm
-  :config
-  (defvar projectile-project-folder '("~/Projects/atwix/"))
-  (setq projectile-enable-caching nil
-	projectile-project-search-path projectile-project-folder
-	projectile-globally-ignored-file-suffixes '("#" "~" ".swp" ".o" ".so" ".pyc" ".jar" "*.class")
-	projectile-globally-ignored-directories '(".git" "node_modules" "__pycache__" ".mypy_cache")
-	projectile-globally-ignored-files '("TAGS" "tags" ".DS_Store" "GTAGS")
-	projectile-mode-line-prefix " - ")
-  (global-set-key (kbd "C-c p") 'projectile-command-map))
 
 ;; Dired extensions and utils
 (use-package dired-sidebar
@@ -427,8 +415,15 @@
 
 (use-package corfu
   :straight (:files (:defaults "extensions/*"))
+  :bind (("C-n"     . corfu-next)
+        ("C-p"     . corfu-previous)
+        ("C-q"     . corfu-quick-insert)
+        ("M-p"     . corfu-popupinfo-scroll-down)
+        ("M-n"     . corfu-popupinfo-scroll-up))
   :init
   (global-corfu-mode)
+  :custom
+  (corfu-popupinfo-direction '(right left vertical))
   :config
   (setq corfu-auto  t
         corfu-auto-prefix 1
@@ -442,11 +437,11 @@
   :after kind-icon)
 
 (use-package kind-icon
-  :straight (:type git :host github :repo "/jdtsmith/kind-icon")
+  :straight (:type git :host github :repo "jdtsmith/kind-icon")
   :after corfu
   :custom
   (kind-icon-default-face 'corfu-default)
-  :config
+  :init
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 ;; PHP settings
@@ -476,21 +471,6 @@
   (define-key php-mode-map (kbd "C-t c") 'phpunit-current-class)
   (define-key php-mode-map (kbd "C-t p") 'phpunit-current-project))
 
-;; PHP debugger
-(use-package dap-mode
-  :straight t
-  :after lsp-mode
-  :init (dap-mode -1)
-  :config
-  (require 'dap-php)
-  (define-key dap-mode-map (kbd "<f5>") 'dap-debug)
-  (define-key dap-mode-map (kbd "s-o") 'dap-next)
-  (define-key dap-mode-map (kbd "s-i") 'dap-step-in)
-  (define-key dap-mode-map (kbd "s-g") 'dap-continue)
-  (define-key dap-mode-map (kbd "<f10>") 'dap-disconnect)
-  (define-key dap-mode-map (kbd "<f9>") 'dap-breakpoint-add)
-  (define-key dap-mode-map (kbd "<f11>") 'dap-breakpoint-delete))
-
 (use-package csv-mode
   :straight t
   :mode (("\\.[Cc][Ss][Vv]\\'" . csv-mode))
@@ -500,8 +480,8 @@
 ;; Php mode
 (use-package php-mode
   :straight (:type git :host github :repo "emacs-php/php-mode")
+  :init (setq php-mode-coding-style 'psr2)
   :config
-  (define-key php-mode-map (kbd "<f12>") 'dap-mode)
   (add-hook 'php-mode-hook 'display-line-numbers-mode)
   (add-hook 'php-mode-hook
             (lambda ()
@@ -569,18 +549,6 @@
   :bind*
   (("C-x e" . sudo-edit-find-file))
   :commands sudo-edit)
-
-(use-package go-translate
-  :straight (:host github :repo "lorniu/go-translate")
-  :bind*
-  (("C-x t w" . gts-do-translate))
-  :config
-  (setq gts-translate-list '(("en" "uk") ("uk" "en")))
-  (setq gts-default-translator
-        (gts-translator
-         :picker (gts-prompt-picker :single t)
-         :engines (list (gts-google-rpc-engine :parser (gts-google-rpc-parser) :url "https://translate.google.com"))
-         :render (gts-buffer-render))))
 
 (use-package gif-screencast
   :straight (:host gitlab :repo "ambrevar/emacs-gif-screencast")
@@ -682,24 +650,19 @@
 ;; ===============================================
 (use-package css-mode
   :straight t
-  :config
-  (setq auto-mode-alist
-	(cons '("\\.css\\'" . css-mode) auto-mode-alist)))
+  :mode (("\\.css\\'" . css-mode)
+         ("\\.scss\\'" . scss-mode)))
 
 ;; Javascript
 ;; ==============================================
 (use-package js2-mode
   :straight (:type git :repo "mooz/js2-mode")
+  :hook ((js2-mode . js2-imenu-extras-mode)
+         (js2-mode . js2-highlight-unused-variables-mode))
+  :mode (("\\.js\\'" . js2-mode)
+         ("\\.jsx\\'" . js2-jsx-mode))
   :config
-  (add-hook 'before-save-hook #'js2-before-save-hook)
-  (add-hook 'js2-mode-hook 'lsp)
-  (setq auto-mode-alist
-	(cons '("\\.js\\'" . js2-mode) auto-mode-alist)))
-
-(defun js2-before-save-hook ()
-  (when (eq major-mode 'js2-mode)
-    (web-beautify-js)
-    (message "File is Beautified")))
+  (add-hook 'before-save-hook #'js2-before-save-hook))
 
 (provide 'init)
 ;;; init.el ends here
