@@ -268,6 +268,15 @@
   (marginalia-max-relative-age 0)
   (marginalia-align 'center))
 
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
 (use-package consult
   :after vertico
   :bind (("C-x b"    . consult-buffer)
