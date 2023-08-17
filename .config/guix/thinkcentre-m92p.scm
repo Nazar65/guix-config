@@ -1,7 +1,7 @@
 ;; Indicate which modules to import to access the variables
 ;; used in this configuration.
 
-(use-modules (gnu) (gnu system) (gnu services syncthing))
+(use-modules (gnu) (gnu system) (gnu services syncthing) (gnu services samba))
 (use-service-modules cups desktop networking ssh xorg)
 
 (define %my-base-services
@@ -39,7 +39,9 @@
     (append
      (list
       (specification->package "nss-certs")
-      (specification->package "syncthing"))
+      (specification->package "syncthing")
+      (specification->package "rsync")
+      (specification->package "samba"))
      %base-packages))
 
    (services
@@ -53,7 +55,26 @@
                             (authorized-keys
                              `(("nazar" ,(local-file "/home/nazar/openssh-keys/thinkcentre-server.pub"))))))
                   (service syncthing-service-type
-                           (syncthing-configuration (user "nazar"))))
+                           (syncthing-configuration (user "nazar")))
+                  (service samba-service-type
+                           (samba-configuration
+                            (enable-smbd? #t)
+                            (config-file (plain-file "smb.conf" "\
+[global]
+map to guest = Bad User
+logging = syslog@1
+workgroup = WORKGROUP
+server string = Samba Server
+server role = standalone server
+security=user
+
+[shared_storage]
+path = /home/nazar/shared_storage
+browsable = yes
+writable = yes
+read only = no
+force user = nazar
+force group = users\n")))))
 
             %my-base-services))
    (bootloader (bootloader-configuration
