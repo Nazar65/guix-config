@@ -51,7 +51,8 @@
                   (service openssh-service-type
                            (openssh-configuration
                             (x11-forwarding? #t)
-                            (permit-root-login 'prohibit-password)
+                            (password-authentication? #f)
+                            (public-key-authentication? #t)
                             (authorized-keys
                              `(("nazar" ,(local-file "/home/nazar/openssh-keys/thinkcentre-server.pub"))))))
                   (service syncthing-service-type
@@ -61,20 +62,24 @@
                             (enable-smbd? #t)
                             (config-file (plain-file "smb.conf" "\
 [global]
-map to guest = Bad User
-logging = syslog@1
-workgroup = WORKGROUP
-server string = Samba Server
-server role = standalone server
-security=user
+   map to guest = Bad User
+   logging = syslog@1
+   workgroup = WORKGROUP
+   server string = Samba Server
+   server role = standalone server
+   security=user
+
+[accounting]
+    max connections = 4
 
 [shared_storage]
-path = /home/nazar/shared_storage
-browsable = yes
-writable = yes
-read only = no
-force user = nazar
-force group = users\n")))))
+   path = /home/nazar/shared_storage
+   browsable = yes
+   writable = yes
+   read only = no
+   valid users = nazar
+   force user = nazar
+   force group = users\n")))))
 
             %my-base-services))
    (bootloader (bootloader-configuration

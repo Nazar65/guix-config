@@ -28,7 +28,7 @@
 (use-service-modules base dbus desktop networking xorg)
 
 (define %wwwuser "nazar")
-(define %active-php-package php74)
+(define %active-php-package php81)
 (define %wwwgroup "httpd")
 (define %local-php-ini "/home/nazar/.config/php/php.ini")
 (define %php-socket-path
@@ -135,6 +135,9 @@
     (specification->package "ripgrep")
     (specification->package "icecat")
     (specification->package "git")
+    (specification->package "clojure")
+    (specification->package "clojure-tools")
+    (specification->package "openjdk")
     (specification->package "mu")
     (specification->package "imagemagick")
     (specification->package "gifsicle")

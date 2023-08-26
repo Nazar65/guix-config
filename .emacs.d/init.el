@@ -177,15 +177,6 @@
   (defun remove-whitespaces (string)
     (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
 
-  (defun bluetooth/switch-profile (profile)
-    (let ((card
-	   (remove-whitespaces
-	    (replace-regexp-in-string
-	     "Name:"
-	     ""
-	     (shell-command-to-string "pactl list | grep bluez_card")))))
-      (start-process "set-bluetooth-profile" nil "pactl" "set-card-profile" card profile)))
-
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (start-process-shell-command "" nil  "shepherd")
@@ -199,12 +190,6 @@
           ([s-right] . windmove-right)
           ([s-up] . windmove-up)
           ([s-down] . windmove-down)
-	  ([?\s-.] . (lambda ()
-		       (interactive)
-		       (bluetooth/switch-profile "a2dp_sink")))
-	  ([?\s-,] . (lambda ()
-		       (interactive)
-		       (bluetooth/switch-profile "handsfree_head_unit")))
           ([?\s-&] . (lambda (command)
                        (interactive (list (read-shell-command "$ ")))
                        (start-process-shell-command command nil command)))
@@ -453,6 +438,23 @@
   :init
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
+
+;; Clojure Programming support
+;; ===============================================
+
+(use-package clojure-mode
+  :straight (:type git :hosts github :repo "clojure-emacs/clojure-mode")
+  :commands (clojure-mode clojurescript-mode)
+  :hook (outline-minor-mode . clojure-mode)
+  :mode (("\\.clj\\'" . clojure-mode)
+	 ("\\.cljs\\'" . clojurescript-mode))
+  :config
+  (add-hook 'clojure-mode-hook 'cider-mode))
+
+(use-package cider
+    :ensure t
+    :commands (cider-mode cider-repl-mode))
+
 ;; PHP settings
 ;; ===============================================
 
@@ -538,12 +540,14 @@
   :hook ((php-mode . eglot-ensure)
          (js2-mode . eglot-ensure)
          (json-mode . eglot-ensure)
-         (css-mode . eglot-ensure))
+         (css-mode . eglot-ensure)
+         (clojure-mode . eglot-ensure))
   :config
   (add-to-list 'eglot-server-programs '(php-mode . ("/home/nazar/lsp-servers/intelephense/node_modules/.bin/intelephense" "--stdio")))
   (add-to-list 'eglot-server-programs '(json-mode . ("/home/nazar/lsp-servers/json-css-html/node_modules/.bin/vscode-json-language-server" "--stdio")))
   (add-to-list 'eglot-server-programs '(js2-mode . ("/home/nazar/lsp-servers/js-typescript/node_modules/.bin/typescript-language-server" "--stdio")))
   (add-to-list 'eglot-server-programs '(css-mode . ("/home/nazar/lsp-servers/json-css-html/node_modules/.bin/vscode-css-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs '(clojure-mode . ("/home/nazar/lsp-servers/clojure/clojure-lsp")))
   (setq eldoc-echo-area-use-multiline-p t)
   (setq eglot-confirm-server-initiated-edits nil)
   (setq eglot-extend-to-xref t))
@@ -654,6 +658,13 @@
   :straight (:type git :host github :repo "magit/magit")
   :config
   (global-set-key (kbd "C-x g") 'magit-status))
+
+(use-package diff-hl
+  :straight (:host github :repo "dgutov/diff-hl")
+  :config
+  (add-hook 'js2-mode 'diff-hl-mode)
+  (add-hook 'emacs-lisp-mode 'diff-hl-mode)
+  (add-hook 'php-mode-hook 'diff-hl-mode))
 
 ;; Styles section css
 ;; ===============================================
