@@ -60,6 +60,10 @@
 (use-package restclient
   :straight (:type git :host github :repo "pashky/restclient.el"))
 
+(use-package lemon
+  :straight (:type git :host codeberg :repo "emacs-weirdware/lemon")
+  :config (lemon-mode 1))
+
 (use-package emacs
   :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)

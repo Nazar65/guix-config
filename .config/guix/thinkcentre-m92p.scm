@@ -28,6 +28,12 @@
                   (group "users")
                   (home-directory "/home/nazar")
                   (supplementary-groups '("wheel" "netdev" "audio" "video")))
+                 (user-account
+                  (name "git")
+                  (comment "Git server user")
+                  (group "users")
+                  (home-directory "/home/git")
+                  (supplementary-groups '("wheel" "netdev")))
                  %base-user-accounts))
 
    (sudoers-file
@@ -41,6 +47,7 @@
       (specification->package "nss-certs")
       (specification->package "syncthing")
       (specification->package "rsync")
+      (specification->package "git")
       (specification->package "samba"))
      %base-packages))
 
