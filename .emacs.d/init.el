@@ -377,7 +377,7 @@
   :config
   (require 'mu4e)
   (mu4e--init-handlers)
-  (run-with-timer 0 300 #'mu4e-update-mail-and-index t)
+  (run-with-timer 0 900 #'mu4e-update-mail-and-index t)
   (mu4e-modeline-mode -1)
   (add-hook 'mu4e-main-mode-hook (lambda()  (mu4e-modeline-mode -1))))
 
@@ -578,9 +578,14 @@
   :commands emojify-mode)
 
 (use-package slack
-  :straight (:host github :repo "isamert/emacs-slack")
-  :commands (slack-start)
+  :straight (:host github :repo "Konubinix/emacs-slack")
   :config
+  (url-cookie-store
+   "d"
+   (auth-source-pick-first-password
+            :host "atwix.slack.com"
+            :user "cookie" :type 'netrc :max 1)
+   nil ".slack.com" "/" t)
   (slack-register-team
    :name "atwix"
    :modeline-enabled t

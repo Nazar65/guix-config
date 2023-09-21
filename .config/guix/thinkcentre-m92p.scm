@@ -61,7 +61,8 @@
                             (password-authentication? #f)
                             (public-key-authentication? #t)
                             (authorized-keys
-                             `(("nazar" ,(local-file "/home/nazar/openssh-keys/thinkcentre-server.pub"))))))
+                             `(("nazar" ,(local-file "/home/nazar/openssh-keys/thinkcentre-server.pub"))
+                               ("git" ,(local-file "/home/nazar/openssh-keys/git-server.pub"))))))
                   (service syncthing-service-type
                            (syncthing-configuration (user "nazar")))
                   (service samba-service-type
