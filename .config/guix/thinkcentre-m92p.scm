@@ -82,6 +82,7 @@
        (specification->package "syncthing")
        (specification->package "rsync")
        (specification->package "git")
+       (specification->package "highlight")
        (specification->package "cgit")
        (specification->package "nginx")
        (specification->package "samba"))
@@ -106,18 +107,7 @@
 			     (readme ":README.md")
 			     (remove-suffix? #t)
 			     (section-from-path 1)
-                             (source-filter
-                              (program-file
-                               "cgit-syntax-highlighting"
-                               #~(apply execl (string-append
-                                               #$cgit "/lib/cgit/filters/syntax-highlighting.py")
-                                        (command-line))))
-                             (about-filter
-                              (program-file
-                               "cgit-about-formatting"
-                               #~(apply execl (string-append
-                                               #$cgit "/lib/cgit/filters/about-formatting.sh")
-                                        (command-line))))
+                             (source-filter "/srv/git/cgit-syntax-highlighting/syntax-highlighting.sh")
 			     (nginx
 			      (list
 			       cgit-nginx-configuration))))
