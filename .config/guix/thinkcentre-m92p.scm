@@ -1,8 +1,16 @@
 ;; Indicate which modules to import to access the variables
 ;; used in this configuration.
 
-(use-modules (gnu) (gnu system) (gnu services syncthing) (gnu services samba))
-(use-service-modules cups desktop networking ssh xorg)
+(use-modules (gnu)
+	     (gnu system)
+	     (gnu services syncthing)
+	     (gnu services samba)
+	     (gnu services web)
+	     (gnu services cgit))
+
+
+(use-package-modules version-control)
+(use-service-modules cups desktop cgit networking ssh xorg)
 
 (define %my-base-services
   (modify-services
@@ -14,6 +22,22 @@
      (authorized-keys
       (append (list (local-file "/etc/guix/signing-key.pub"))
               %default-authorized-guix-keys))))))
+
+(define cgit-nginx-configuration
+  (nginx-server-configuration
+   (root cgit)
+   (server-name '("192.168.88.12"))
+   (listen '("80"))
+   (locations
+    (list
+     (nginx-location-configuration
+      (uri "@cgit")
+      (body '("fastcgi_param SCRIPT_FILENAME $document_root/lib/cgit/cgit.cgi;"
+	      "fastcgi_param PATH_INFO $uri;"
+	      "fastcgi_param QUERY_STRING $args;"
+	      "fastcgi_param HTTP_HOST $server_name;"
+	      "fastcgi_pass 127.0.0.1:9000;")))))
+   (try-files (list "$uri" "@cgit"))))
 
 (define thinkcentre-server
   (operating-system
@@ -48,6 +72,8 @@
       (specification->package "syncthing")
       (specification->package "rsync")
       (specification->package "git")
+      (specification->package "cgit")
+      (specification->package "nginx")
       (specification->package "samba"))
      %base-packages))
 
@@ -55,14 +81,29 @@
     (append (list (service network-manager-service-type)
                   (service wpa-supplicant-service-type)
                   (service ntp-service-type)
+		  (service cgit-service-type
+			   (cgit-configuration
+			    (repository-directory "/srv/git/repositories")
+			    (enable-git-config? #t)
+			    (enable-index-links? #t)
+			    (enable-html-serving? #t)
+			    (enable-commit-graph? #t)
+			    (enable-log-filecount? #t)
+			    (enable-log-linecount? #t)
+			    (readme ":README.md")
+			    (remove-suffix? #t)
+			    (section-from-path 1)
+			   (nginx
+			    (list
+			     cgit-nginx-configuration))))
                   (service openssh-service-type
                            (openssh-configuration
                             (x11-forwarding? #t)
                             (password-authentication? #f)
                             (public-key-authentication? #t)
                             (authorized-keys
-                             `(("nazar" ,(local-file "/home/nazar/openssh-keys/thinkcentre-server.pub"))
-                               ("git" ,(local-file "/home/nazar/openssh-keys/git-server.pub"))))))
+                             `(("nazar" ,(local-file "/home/nazar/.ssh/thinkcentre-server.pub"))
+                               ("git" ,(local-file "/home/nazar/.ssh/git-server.pub"))))))
                   (service syncthing-service-type
                            (syncthing-configuration (user "nazar")))
                   (service samba-service-type
@@ -122,5 +163,5 @@
                        (system "x86_64-linux")
                        (host-key "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4Ulgiz4PYU/eA8lloeBo/2ccRaNINsV/3hpsNOOV97 root@(none)")
                        (build-locally? #f)
-                       (identity "/home/nazar/.ssh/thinkcentre_server")
+                       (identity "/home/nazar/.ssh/thinkcentre-server")
                        (user "nazar")))))
