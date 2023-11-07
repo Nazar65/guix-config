@@ -2,6 +2,13 @@
 ;; used in this configuration.
 
 (use-modules (gnu)
+              (ice-9 match)
+             (ice-9 popen)
+             (ice-9 regex)
+             (ice-9 textual-ports)
+             (srfi srfi-1)
+             (srfi srfi-2)
+             (srfi srfi-26)
 	     (gnu system)
 	     (gnu services syncthing)
 	     (gnu services samba)
@@ -30,6 +37,9 @@
    (listen '("80"))
    (locations
     (list
+     (nginx-location-configuration ;; So CSS & co. are found
+      (uri "~ ^/share/cgit/cgit.css")
+      (body `(("root /srv/git/css;"))))
      (nginx-location-configuration
       (uri "@cgit")
       (body '("fastcgi_param SCRIPT_FILENAME $document_root/lib/cgit/cgit.cgi;"
@@ -83,8 +93,11 @@
                   (service ntp-service-type)
 		  (service cgit-service-type
 			   (cgit-configuration
+                            (root-desc "CGIT Browser")
+                            (root-title "Klovanych's Git Hosting Sapce")
 			    (repository-directory "/srv/git/repositories")
 			    (enable-git-config? #t)
+                            (side-by-side-diffs? #t)
 			    (enable-index-links? #t)
 			    (enable-html-serving? #t)
 			    (enable-commit-graph? #t)
@@ -93,6 +106,18 @@
 			    (readme ":README.md")
 			    (remove-suffix? #t)
 			    (section-from-path 1)
+                            (source-filter
+                             (program-file
+                              "cgit-syntax-highlighting"
+                              #~(apply execl (string-append
+                                              #$cgit "/lib/cgit/filters/syntax-highlighting.py")
+                                       (command-line))))
+                            (about-filter
+                             (program-file
+                              "cgit-about-formatting"
+                              #~(apply execl (string-append
+                                              #$cgit "/lib/cgit/filters/about-formatting.sh")
+                                       (command-line))))
 			   (nginx
 			    (list
 			     cgit-nginx-configuration))))
