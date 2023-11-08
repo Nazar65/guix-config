@@ -98,6 +98,7 @@
 #
 
 # store filename and extension in local vars
+export HIGHLIGHT_DATADIR="/srv/git/.highlight/"
 BASENAME="$1"
 EXTENSION="${BASENAME##*.}"
 
@@ -118,4 +119,4 @@ EXTENSION="${BASENAME##*.}"
 #exec highlight --force -f -I -X -S "$EXTENSION" 2>/dev/null
 
 # This is for version 3
-exec highlight --force --inline-css --style=moria -f -I -O xhtml -S css 2>/dev/null
+exec highlight --force --inline-css --style=moria -f -I -O xhtml -S "$EXTENSION"

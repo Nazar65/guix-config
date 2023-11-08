@@ -471,7 +471,7 @@
   (define-key php-mode-map (kbd "<C-tab>") 'php-doc-block))
 
 (use-package php-cs-fixer
-  :straight (:type git :repo "Nazar65/emacs-php-cs-fixer")
+  :straight (:type git :repo "http://git-space.klovanych.org/emacs-php-cs-fixer/")
   :after php-mode
   :config
   (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"
