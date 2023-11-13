@@ -232,7 +232,7 @@
 	    (setq exwm-randr-workspace-output-plist (list 0 default-output))
 	  (call-process
            "xrandr" nil nil nil
-           "--output" (match-string 1) "--primary" "--auto" "--above" default-output "--rotate" "normal"
+           "--output" (match-string 1) "--primary" "--auto" "--right-of" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
@@ -350,6 +350,8 @@
   (setq dired-sidebar-subtree-line-prefix "  ")
   (setq dired-sidebar-use-term-integration t)
   (setq dired-sidebar-width 38))
+
+(use-package image-dired)
 
 ;; Icons for dired sidebar
 (use-package vscode-icon
@@ -471,7 +473,7 @@
   (define-key php-mode-map (kbd "<C-tab>") 'php-doc-block))
 
 (use-package php-cs-fixer
-  :straight (:type git :repo "http://git-space.klovanych.org/emacs-php-cs-fixer/")
+  :straight (:type git :repo "http://git-space.klovanych.org/emacs-php-cs-fixer")
   :after php-mode
   :config
   (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"
