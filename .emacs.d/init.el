@@ -42,6 +42,15 @@
   (add-to-list 'eshell-modules-list 'eshell-tramp)
   :straight (:type built-in))
 
+(use-package wallpaper
+  :straight (:type git :host github :repo "farlado/emacs-wallpaper")
+  :hook ((exwm-randr-screen-change . wallpaper-set-wallpaper)
+         (after-init . wallpaper-cycle-mode))
+  :custom ((wallpaper-cycle-single t)
+           (wallpaper-scaling 'scale)
+           (wallpaper-cycle-interval 45)
+           (wallpaper-cycle-directory "~/Pictures/wallpapers")))
+
 (use-package desktop-environment
   :straight (:type git :host github :repo "DamienCassou/desktop-environment")
   :after exwm
@@ -82,15 +91,15 @@
   (tool-bar-mode 0)
   (tooltip-mode 0)
   (menu-bar-mode 0)
-  (display-time-mode 1)
-  (display-battery-mode 1)
+  (display-time-mode 0)
+  (display-battery-mode 0)
   (defun eos/crm-indicator (args)
-      (cons (format "[CRM%s] %s"
-                    (replace-regexp-in-string
-                     "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-                     crm-separator)
-                    (car args))
-            (cdr args)))
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'eos/crm-indicator)
   (setq read-extended-command-predicate
         #'command-completion-default-include-p)
@@ -106,8 +115,8 @@
   (put 'dired-find-alternate-file 'disabled nil)
   :config
   (setq display-time-mail-string "")
-  (setq display-time-day-and-date t)
-  (setq display-time-24hr-format t)
+  (setq display-time-day-and-date nil)
+  (setq display-time-24hr-format nil)
   (setq undo-limit 800000)
   (setq undo-strong-limit 12000000)
   (setq undo-outer-limit 120000000)
@@ -161,6 +170,80 @@
   (when (file-exists-p custom-file)
     (load custom-file)))
 
+(defvar counsel-network-manager-history nil
+  "Network manager history.")
+
+(defun counsel-network-manager (&optional initial-input)
+  "Connect to wifi network."
+  (interactive)
+  (shell-command "nmcli device wifi rescan")
+  (let ((networks-list (s-split "\n" (shell-command-to-string "nmcli device wifi list"))))
+    (consult--read networks-list
+                   :prompt "Select network"
+                   :initial initial-input
+                   :require-match t
+                   :history counsel-network-manager-history
+                   :sort nil
+                   :lookup (lambda (line &rest _)
+                             (let ((network (car (s-split " " (s-trim (s-chop-prefix "*" line)) t))))
+                               (message "Connecting to \"%s\".." network)
+                               (async-shell-command
+                                (format "sudo nmcli device wifi connect %s" (shell-quote-argument network))))))))
+
+(defun dw/go-to-inbox ()
+  (interactive)
+  (mu4e-headers-search dw/mu4e-inbox-query))
+
+(setq dw/mu4e-inbox-query
+      "(maildir:/INBOX) AND flag:unread")
+
+(defun dw/polybar-mail-count (max-count)
+  (let ((mail-count (shell-command-to-string
+                     (format "mu find --nocolor -n %s \"%s\" | wc -l" max-count dw/mu4e-inbox-query))))
+    (if (string-match "error" (string-trim mail-count))
+        (setq mail-count "0"))
+    (format " %s" (string-trim mail-count))))
+
+(use-package app-launcher
+  :straight (:type git :host github :repo "SebastienWae/app-launcher"))
+
+(defun dw/slack-messages-count ()
+  (let ((teams (hash-table-values slack-teams-by-token)))
+    (when (< 0 (length teams))
+      (setq alist
+            (mapcar #'(lambda (e)
+                        (cons (or (oref e modeline-name)
+                                  (slack-team-name e))
+                              (slack-team-counts-summary e)))
+                    teams))))
+
+  (mapconcat #'(lambda (e)
+                 (let* ((team-name (car e))
+                        (summary (cdr e))
+                        (thread (cdr (cl-assoc 'thread summary)))
+                        (channel (cdr (cl-assoc 'channel summary)))
+                        (thread-mention-count (cdr thread))
+                        (channel-mention-count (cdr channel))
+                        (count-messages (+ channel-mention-count thread-mention-count)))
+                   (format " %s" (number-to-string count-messages))))
+             alist " "))
+
+
+(defvar efs/polybar-process nil
+  "Holds the process of the running Polybar instance, if any")
+
+(defun efs/kill-panel ()
+  (interactive)
+  (when efs/polybar-process
+    (ignore-errors
+      (kill-process efs/polybar-process)))
+  (setq efs/polybar-process nil))
+
+(defun efs/start-panel ()
+  (interactive)
+  (efs/kill-panel)
+  (setq efs/polybar-process (start-process "polybar" "polybar" "polybar" "bar")))
+
 (use-package exwm
   :init
   (require 'exwm)
@@ -169,6 +252,7 @@
   (exwm-enable)
   (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
   (add-hook 'exwm-init-hook #'efs/exwm-init-hook)
+  (add-hook 'exwm-workspace-switch-hook #'dw/update-polybar-exwm)
   (add-hook 'exwm-randr-screen-change-hook #'efs/exwm-change-screen-hook)
   (exwm-systemtray-enable)
   (exwm-randr-enable)
@@ -181,10 +265,17 @@
   (defun remove-whitespaces (string)
     (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
 
+  (defun dw/update-polybar-exwm ()
+    (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook mu4e 1" ))
+    (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
+    (efs/start-panel)
+    (server-start)
     (start-process-shell-command "" nil  "shepherd")
-    (eshell))
+    (eshell)
+    (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
+    (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
 
   (setq exwm-layout-show-all-buffers t)
   (setq exwm-input-global-keys
@@ -194,9 +285,7 @@
           ([s-right] . windmove-right)
           ([s-up] . windmove-up)
           ([s-down] . windmove-down)
-          ([?\s-&] . (lambda (command)
-                       (interactive (list (read-shell-command "$ ")))
-                       (start-process-shell-command command nil command)))
+          ([?\s-&] . app-launcher-run-app)
           ([?\s-w] . exwm-workspace-switch)
           ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
           ,@(mapcar (lambda (i)
@@ -229,7 +318,7 @@
         (forward-line)
         (if (not (re-search-forward xrandr-output-regexp nil 'noerror))
 	    (call-process "xrandr" nil nil nil "--output" default-output "--auto" "--current")
-	    (setq exwm-randr-workspace-output-plist (list 0 default-output))
+	  (setq exwm-randr-workspace-output-plist (list 0 default-output))
 	  (call-process
            "xrandr" nil nil nil
            "--output" (match-string 1) "--primary" "--auto" "--right-of" default-output "--rotate" "normal"
@@ -398,11 +487,7 @@
   :straight (:type git :host github :repo "seagle0128/doom-modeline")
   :hook (after-init . doom-modeline-mode)
   :config
-  (with-eval-after-load "doom-modeline"
-    (doom-modeline-def-modeline 'main
-      '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
-      '(objed-state lsp vcs major-mode persp-name grip gnus github debug repl minor-modes input-method indent-info checker process mu4e misc-info battery time "  ")))
-  (setq doom-modeline-mu4e t)
+  (setq doom-modeline-mu4e -1)
   (setq doom-modeline-height 25)
   (setq doom-modeline-buffer-encoding nil)
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
@@ -416,10 +501,10 @@
 (use-package corfu
   :straight (:files (:defaults "extensions/*"))
   :bind (("C-n"     . corfu-next)
-        ("C-p"     . corfu-previous)
-        ("C-q"     . corfu-quick-insert)
-        ("M-p"     . corfu-popupinfo-scroll-down)
-        ("M-n"     . corfu-popupinfo-scroll-up))
+         ("C-p"     . corfu-previous)
+         ("C-q"     . corfu-quick-insert)
+         ("M-p"     . corfu-popupinfo-scroll-down)
+         ("M-n"     . corfu-popupinfo-scroll-up))
   :init
   (global-corfu-mode)
   :custom
@@ -458,8 +543,8 @@
   (add-hook 'clojure-mode-hook 'cider-mode))
 
 (use-package cider
-    :ensure t
-    :commands (cider-mode cider-repl-mode))
+  :ensure t
+  :commands (cider-mode cider-repl-mode))
 
 ;; PHP settings
 ;; ===============================================
@@ -585,12 +670,12 @@
   (url-cookie-store
    "d"
    (auth-source-pick-first-password
-            :host "atwix.slack.com"
-            :user "cookie" :type 'netrc :max 1)
+    :host "atwix.slack.com"
+    :user "cookie" :type 'netrc :max 1)
    nil ".slack.com" "/" t)
   (slack-register-team
    :name "atwix"
-   :modeline-enabled t
+   :modeline-enabled nil
    :default t
    :token (auth-source-pick-first-password
            :host "atwix.slack.com"
@@ -602,51 +687,20 @@
   (setq slack-log-level 'error)
   (setq slack-buffer-function 'switch-to-buffer)
   (setq slack-buffer-function #'switch-to-buffer-other-window)
-  ;; ^ Open slack windows on the right side of the screen
-  (setq slack-modeline-formatter #'slack-icon-modeline-formatter)
   (setq slack-alert-icon "/home/nazar/.emacs.d/static/slack/icon.png")
   (setq slack-enable-global-mode-string t)
-  (setq slack-modeline-count-only-subscribed-channel nil)
   (setq slack-buffer-emojify t)
   (setq slack-render-image-p t)
   (setq slack-prefer-current-team t)
-  (setq tracking-max-mode-line-entries 0)
   (define-key ctl-x-map "j" #'slack-select-rooms)
   (define-key ctl-x-map "l" #'slack-select-unread-rooms)
   (define-key slack-mode-map "@"
-    (defun endless/slack-message-embed-mention ()
-      (interactive)
-      (call-interactively #'slack-message-embed-mention)
-      (insert " ")))
+              (defun endless/slack-message-embed-mention ()
+                (interactive)
+                (call-interactively #'slack-message-embed-mention)
+                (insert " ")))
   (define-key slack-mode-map (kbd "C-c C-e")
-    #'slack-message-edit)
-  (defun emacs-mode-line-logo-image ()
-    (find-image
-     (list (list :type 'svg
-		 :file "/home/nazar/.emacs.d/static/slack/Slack_icon_2019.svg"
-                 :scale 1 :ascent 'center
-		 :mask 'heuristic
-                 :height 15))))
-  (defun slack-icon-modeline-formatter (alist)
-    (mapconcat #'(lambda (e)
-                   (let* ((summary (cdr e))
-                          (thread (cdr (cl-assoc 'thread summary)))
-                          (channel (cdr (cl-assoc 'channel summary)))
-                          (thread-has-unreads (car thread))
-                          (channel-has-unreads (car channel))
-                          (has-unreads (or thread-has-unreads
-                                           channel-has-unreads))
-                          (thread-mention-count (cdr thread))
-                          (channel-mention-count (cdr channel))
-			  (count-messages (+ channel-mention-count thread-mention-count)))
-                     (format " %s %s "
-			     (propertize "◀"
-					 'display (emacs-mode-line-logo-image))
-                             (if (or channel-has-unreads (< 0 count-messages))
-				 (propertize (number-to-string count-messages)
-                                             'face 'slack-modeline-channel-has-unreads-face)
-                               0))))
-               alist ""))
+              #'slack-message-edit)
   (advice-add 'slack-message-notify-alert :before
 	      (lambda(message room team)
 		(if (slack-message-notify-p message room team)

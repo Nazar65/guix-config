@@ -15,6 +15,7 @@
   #:use-module (gnu packages pulseaudio)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages mail)
+  #:use-module (gnu packages rofi)
   #:use-module (gnu packages web)
   #:use-module (gnu system setuid)
   #:use-module (gnu services pm)
@@ -81,6 +82,7 @@
      (handle-power-key 'suspend)
      (handle-lid-switch-external-power 'suspend)))))
 
+
 (operating-system
  (locale "en_US.utf8")
  (timezone "Europe/Uzhgorod")
@@ -135,6 +137,8 @@
     (specification->package "ripgrep")
     (specification->package "icecat")
     (specification->package "git")
+    (specification->package "font-awesome")
+    (specification->package "polyar")
     (specification->package "clojure")
     (specification->package "clojure-tools")
     (specification->package "openjdk")
@@ -175,7 +179,6 @@
     (specification->package "alsa-utils")
     (specification->package "emacs-desktop-environment")
     (specification->package "nss-certs")
-    (specification->package "xdebug3")
     (specification->package "cifs-utils")
     (specification->package "nfs-utils")
     (specification->package "xinput"))

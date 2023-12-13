@@ -8,6 +8,14 @@
     #:stop (make-kill-destructor)
     #:respawn? #t))
 
-(register-services notification-daemon)
+(define xcompmgr-daemon
+  (make <service>
+    #:provides '(xcompmgr-daemon)
+    #:docstring "Run xcompmgr-daemon"
+    #:start (make-forkexec-constructor '("xcompmgr" "-c" "-t-6" "-l-6" "-o.1" "&"))
+    #:stop (make-kill-destructor)
+    #:respawn? #t))
 
-(for-each start '(notification-daemon))
+(register-services notification-daemon xcompmgr-daemon)
+
+(for-each start '(notification-daemon xcompmgr-daemon))
