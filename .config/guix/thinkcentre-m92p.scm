@@ -19,6 +19,8 @@
 (use-package-modules version-control)
 (use-service-modules cups desktop cgit networking ssh xorg)
 
+(define git-http-regex
+  "^.*/(HEAD|info/refs|objects/info/.*|git-(upload|receive)-pack)$")
 (define %default-domain "git-space.klovanych.org")
 (define %my-base-services
   (modify-services
@@ -34,8 +36,10 @@
 (define cgit-nginx-configuration
   (nginx-server-configuration
    (root cgit)
-   (server-name '("192.168.88.12"))
-   (listen '("80"))
+   (server-name '("git-space.klovanych.org"))
+   (listen '("443 ssl http2"))
+   (ssl-certificate-key "/srv/git/certs/git-space.klovanych.org/nginx-selfsigned.key")
+   (ssl-certificate "/srv/git/certs/git-space.klovanych.org/nginx-selfsigned.crt")
    (locations
     (list
      (nginx-location-configuration ;; So CSS & co. are found
@@ -44,6 +48,17 @@
      (nginx-location-configuration
       (uri "~ ^/images/")
       (body `(("root /srv/git/;"))))
+     (nginx-location-configuration
+      (uri (string-append "~ " git-http-regex))
+      (body `("fastcgi_param CONTENT_LENGTH $content_length;"
+              "fastcgi_param CONTENT_TYPE $content_type;"
+              ("fastcgi_param SCRIPT_FILENAME ", git "/libexec/git-core/git-http-backend;")
+              "fastcgi_param GIT_HTTP_EXPORT_ALL '';"
+              "fastcgi_param GIT_PROJECT_ROOT /srv/git/repositories;"
+              "fastcgi_param PATH_INFO $uri;"
+              "fastcgi_param QUERY_STRING $args;"
+              "fastcgi_param REQUEST_METHOD $request_method;"
+              "fastcgi_pass 127.0.0.1:9000;")))
      (nginx-location-configuration
       (uri "@cgit")
       (body '("fastcgi_param SCRIPT_FILENAME $document_root/lib/cgit/cgit.cgi;"
@@ -88,6 +103,7 @@
        (specification->package "git")
        (specification->package "highlight")
        (specification->package "cgit")
+       (specification->package "fcgiwrap")
        (specification->package "nginx")
        (specification->package "samba"))
       %base-packages))
@@ -103,7 +119,7 @@
                              (root-title "Klovanych's Git Hosting Space")
                              (logo "/images/goat_logo.png")
                              (favicon "/images/favicon.ico")
-                             (clone-url (list (format #f "http://~a/$CGIT_REPO_URL " %default-domain)))
+                             (clone-url (list (format #f "https://~a/$CGIT_REPO_URL " %default-domain)))
 			     (repository-directory "/srv/git/repositories")
 			     (enable-git-config? #t)
 			     (enable-index-links? #t)

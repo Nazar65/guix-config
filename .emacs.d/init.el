@@ -267,6 +267,7 @@
 
   (defun dw/update-polybar-exwm ()
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook mu4e 1" ))
+    
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)

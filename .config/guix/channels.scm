@@ -12,7 +12,7 @@
         (url "https://git-space.klovanych.org/guix-packages-channel")
         (introduction
          (make-channel-introduction
-          "e8d76f837274a2eda03ed90a22bee5f65ac55c67"
+          "cd48ca3b1cf0331a7d4cda7e79d4792ee2c1e57f"
           (openpgp-fingerprint
            "736A C00E 1254 378B A982  7AF6 9DBE 8265 81B6 4490"))))
        %default-channels)

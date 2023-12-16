@@ -82,7 +82,6 @@
      (handle-power-key 'suspend)
      (handle-lid-switch-external-power 'suspend)))))
 
-
 (operating-system
  (locale "en_US.utf8")
  (timezone "Europe/Uzhgorod")
@@ -167,7 +166,6 @@
     (specification->package "setxkbmap")
     (specification->package "pulseaudio")
     (specification->package "rsync")
-    (specification->package "notification-daemon")
     (specification->package %php-package)
     (specification->package "binutils")
     (specification->package "elasticsearch")
