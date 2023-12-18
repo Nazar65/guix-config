@@ -322,7 +322,7 @@
 	  (setq exwm-randr-workspace-output-plist (list 0 default-output))
 	  (call-process
            "xrandr" nil nil nil
-           "--output" (match-string 1) "--primary" "--auto" "--right-of" default-output "--rotate" "normal"
+           "--output" (match-string 1) "--primary" "--auto" "--left-of" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 
