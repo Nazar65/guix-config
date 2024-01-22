@@ -87,6 +87,7 @@
                             (let ((startup-time (float-time (time-subtract after-init-time before-init-time))))
                               (message "Emacs ready in %.2f seconds with %d garbage collections." startup-time gcs-done)))))
   :init
+  (pinentry-start)
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
   (tooltip-mode 0)
@@ -114,6 +115,8 @@
   (history-length 600)
   (put 'dired-find-alternate-file 'disabled nil)
   :config
+  (setq epa-pinentry-mode 'loopback)
+  (setq warning-minimum-level :emergency)
   (setq display-time-mail-string "")
   (setq display-time-day-and-date nil)
   (setq display-time-24hr-format nil)
@@ -124,6 +127,12 @@
   (setq password-cache-expiry 3600)
   (setq nxml-child-indent 4 nxml-attribute-indent 4)
   (setq desktop-path '("~/.emacs.d/" "~" "."))
+  (setq explicit-shell-file-name "/usr/bin/zsh")
+  (setq shell-file-name "zsh")
+  (setq explicit-zsh-args '("--login" "--interactive"))
+  (defun zsh-shell-mode-setup ()
+    (setq-local comint-process-echoes t))
+  (add-hook 'shell-mode-hook #'zsh-shell-mode-setup)
   (global-unset-key "\C-z")
   (global-set-key "\C-z" 'advertised-undo))
 
@@ -245,22 +254,21 @@
   (setq efs/polybar-process (start-process "polybar" "polybar" "polybar" "bar")))
 
 (use-package exwm
+  :straight (:type git :host github :repo "ch11ng/exwm")
   :init
   (require 'exwm)
   (require 'exwm-randr)
-  (require 'exwm-systemtray)
   (exwm-enable)
+  (exwm-randr-enable)
   (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
   (add-hook 'exwm-init-hook #'efs/exwm-init-hook)
   (add-hook 'exwm-workspace-switch-hook #'dw/update-polybar-exwm)
   (add-hook 'exwm-randr-screen-change-hook #'efs/exwm-change-screen-hook)
-  (exwm-systemtray-enable)
-  (exwm-randr-enable)
   :config
   (defun efs/configure-window-by-class ()
     (interactive)
     (pcase (buffer-name)
-      ("*eshell*" (exwm-workspace-move 1))))
+      ("*shell*" (exwm-workspace-move 1))))
 
   (defun remove-whitespaces (string)
     (replace-regexp-in-string "\\`[ \t\n]*" "" (replace-regexp-in-string "[ \t\n]*\\'" "" string)))
@@ -271,13 +279,12 @@
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
-    (efs/start-panel)
     (server-start)
+    (efs/start-panel)
     (start-process-shell-command "" nil  "shepherd")
-    (eshell)
+    (shell)
     (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
-
   (setq exwm-layout-show-all-buffers t)
   (setq exwm-input-global-keys
         `(([s-print] . desktop-environment-screenshot-part)
@@ -433,8 +440,6 @@
   :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
   :commands (dired-sidebar-toggle-sidebar)
   :config
-  (add-hook 'dired-sidebar-mode-hook
-            (lambda () (linum-mode -1)))
   (setq dired-sidebar-theme 'nerd)
   (setq dired-sidebar-theme 'vscode)
   (setq dired-sidebar-subtree-line-prefix "  ")
@@ -558,13 +563,6 @@
   :config
   (define-key php-mode-map (kbd "<C-tab>") 'php-doc-block))
 
-(use-package php-cs-fixer
-  :straight (:type git :repo "http://git-space.klovanych.org/emacs-php-cs-fixer")
-  :after php-mode
-  :config
-  (setq php-cs-fixer-rules-config-file "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.dist.php"
-        php-cs-fixer-cache-file-path "/home/nazar/.dotfiles/.config/php/.php-cs-fixer.cache"))
-
 (use-package phpunit
   :straight (:type git :host github :repo "nlamirault/phpunit.el")
   :config
@@ -664,6 +662,19 @@
 
 (use-package emojify
   :commands emojify-mode)
+
+(use-package nix-mode
+  :straight (:host github :repo "NixOS/nix-mode")
+  :mode "\\.nix\\'")
+
+(use-package ement
+  :straight (:host github :repo "alphapapa/ement.el")
+  :hook ((ement-room-list-mode . emojify-mode)
+	 (ement-room-mode . emojify-mode))
+  :config
+  (setf use-default-font-for-symbols nil)
+  (set-fontset-font t 'unicode "Noto Emoji" nil 'append)
+  (ement-connect :uri-prefix "http://localhost:8009"))
 
 (use-package slack
   :straight (:host github :repo "Konubinix/emacs-slack")

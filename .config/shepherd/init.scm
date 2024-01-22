@@ -4,7 +4,7 @@
   (make <service>
     #:provides '(notification-daemon)
     #:docstring "Run notification-daemon"
-    #:start (make-forkexec-constructor '("/home/nazar/.guix-profile/libexec/notification-daemon" "-r" "&"))
+    #:start (make-forkexec-constructor '((string-append (getenv "HOME") ".guix-profile/libexec/notification-daemon" "-r" "&")))
     #:stop (make-kill-destructor)
     #:respawn? #t))
 
@@ -16,6 +16,14 @@
     #:stop (make-kill-destructor)
     #:respawn? #t))
 
-(register-services notification-daemon xcompmgr-daemon)
+(define pantalaimon-daemon
+  (make <service>
+    #:provides '(pantalaimon-daemon)
+    #:docstring "Run pantalaimon-daemon"
+    #:start (make-forkexec-constructor '("pantalaimon-daemon"))
+    #:stop (make-kill-destructor)
+    #:respawn? #t))
 
-(for-each start '(notification-daemon xcompmgr-daemon))
+(register-services xcompmgr-daemon pantalaimon-daemon)
+
+(for-each start '(xcompmgr-daemon pantalaimon-daemon))

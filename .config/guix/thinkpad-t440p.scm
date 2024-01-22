@@ -9,13 +9,10 @@
   #:use-module (guix)
   #:use-module (guix utils)
   #:use-module (guix packages)
-  #:use-module (packages composer)
-  #:use-module (packages php)
   #:use-module (gnu packages audio)
   #:use-module (gnu packages pulseaudio)
   #:use-module (gnu packages admin)
   #:use-module (gnu packages mail)
-  #:use-module (gnu packages web)
   #:use-module (gnu system setuid)
   #:use-module (gnu services pm)
   #:use-module (gnu services web)
@@ -28,20 +25,9 @@
 
 (use-service-modules base dbus desktop networking xorg)
 
-(define %active-php-package php81)
-(define %local-php-ini "/home/nazar/.config/php/php.ini")
-(define %php-socket-path
-  (string-append "/var/run/php"
-		 (version-major
-		  (package-version %active-php-package))
-		 "-fpm.sock"))
-
 (define huawei-usb-modem-udev-rule
   (file->udev-rule "90-huawei-usb-modem-rule.rules"
 		   (local-file "udev/60-usb_modeswitch.rules")))
-
-(define %php-package (string-append "php@"
-				    (package-version %active-php-package)))
 
 (define %my-desktop-services
   (modify-services
@@ -67,8 +53,8 @@
   (locale "en_US.utf8")
   (timezone "Europe/Uzhgorod")
   (keyboard-layout
-   (keyboard-layout "us,ua,ru" #:options '("grp:alt_shift_toggle" "ctrl:nocaps")))
-  (host-name "alienware")
+   (keyboard-layout "us,ua" #:options '("grp:alt_shift_toggle" "ctrl:nocaps")))
+  (host-name "t440p")
 
   (essential-services
    (modify-services
@@ -76,7 +62,7 @@
      (hosts-service-type config => (list
                                     (host "127.0.0.1" "localhost")
                                     (host "::1"       "localhost")
-                                    (host "127.0.0.1" "alienware.ai")))))
+                                    (host "127.0.0.1" "development.local")))))
 
   (groups (cons (user-group (name "openvpn")) %base-groups))
   (users
@@ -87,7 +73,7 @@
      (group "users")
      (home-directory "/home/nazar")
      (supplementary-groups
-      '("wheel" "netdev" "audio" "video" "php-fpm")))
+      '("wheel" "netdev" "audio" "video")))
     %base-user-accounts))
   (setuid-programs
    (append
@@ -109,97 +95,68 @@
     (list
      (specification->package "emacs")
      (specification->package "emacs-exwm")
+     (specification->package "emacs-desktop-environment")
+     (specification->package "notification-daemon")
+     (specification->package "pinentry-emacs")
+     (specification->package "zsh")
+     (specification->package "perl")
+     (specification->package "direnv")
      (specification->package "libnotify")
      (specification->package "brightnessctl")
-     (specification->package "notification-daemon")
      (specification->package "xrandr")
      (specification->package "pavucontrol")
      (specification->package "password-store")
      (specification->package "gnupg")
      (specification->package "ripgrep")
      (specification->package "icecat")
-     (specification->package "git")
+     (specification->package "ungoogled-chromium")
+     (specification->package "pantalaimon")
+     (specification->package "openvpn")
      (specification->package "font-awesome")
      (specification->package "polybar")
      (specification->package "clojure")
      (specification->package "clojure-tools")
      (specification->package "openjdk")
      (specification->package "mu")
+     (specification->package "feh")
      (specification->package "imagemagick")
      (specification->package "gifsicle")
      (specification->package "offlineimap3")
      (specification->package "isync")
      (specification->package "msmtp")
-     (specification->package "the-silver-searcher")
      (specification->package "ispell")
      (specification->package "stow")
-     (specification->package "node")
      (specification->package "sendmail")
      (specification->package "w3m")
      (specification->package "curl")
      (specification->package "git")
      (specification->package "network-manager")
-     (specification->package "httpd")
-     (specification->package "mysql")
      (specification->package "scrot")
      (specification->package "file")
-     (specification->package "speedtest-cli")
      (specification->package "tdlib")
      (specification->package "opensmtpd")
      (specification->package "setxkbmap")
      (specification->package "pulseaudio")
      (specification->package "rsync")
-     (specification->package %php-package)
      (specification->package "binutils")
-     (specification->package "elasticsearch")
-     (specification->package "phpfixer")
-     (specification->package "composer")
      (specification->package "openssh")
      (specification->package "redis")
      (specification->package "usb-modeswitch")
      (specification->package "alsa-utils")
-     (specification->package "emacs-desktop-environment")
      (specification->package "nss-certs")
      (specification->package "cifs-utils")
      (specification->package "nfs-utils")
+     (specification->package "xcompmgr")
      (specification->package "xinput"))
     %base-packages))
 
   (services
    (append
     (list
-     (service tor-service-type)
-     (service redis-service-type)
-     (service nginx-service-type
-              (nginx-configuration
-               (server-blocks
-                (list (nginx-server-configuration
-                       (listen '("443 ssl http2"))
-                       (server-name '("alieware.ai"))
-                       (root "/srv/alienware.ai/pub")
-                       (index '("index.php"))
-                       (raw-content '(("set $MAGE_ROOT /srv/alienware.ai/pub;")
-                                      ("include /home/nazar/.dotfiles/.config/nginx/nginx.conf;")))
-                       (locations
-                        (list (nginx-php-location)))
-                       (ssl-certificate "/home/nazar/.dotfiles/.config/guix/certs/alienware.ai/mysitename.crt")
-                       (ssl-certificate-key "/home/nazar/.dotfiles/.config/guix/certs/alienware.ai/mysitename.key"))))))
-
-     (service php-fpm-service-type
-	      (php-fpm-configuration
-	       (php %active-php-package)
-	       (socket %php-socket-path)
-	       (display-errors "#t")
-	       (php-ini-file %local-php-ini)))
-
-     (service mysql-service-type
-	      (mysql-configuration
-               (socket "/run/mysqld/mysqld.sock")
-	       (auto-upgrade? "#f")))
-
+     (service tor-service-type)     
      (service zram-device-service-type
 	      (zram-device-configuration
-	       (size "1G")
+	       (size "8G")
 	       (compression-algorithm 'zstd)))
 
      (service opensmtpd-service-type
@@ -237,21 +194,20 @@
        (keyboard-layout keyboard-layout))))
     %my-desktop-services))
 
-  (bootloader
-   (bootloader-configuration
-    (bootloader grub-bootloader)
-    (targets '("/dev/sda"))
-    (keyboard-layout keyboard-layout)))
-  (mapped-devices
-   (list (mapped-device
-          (source
-           (uuid "f8ebc0ab-ae53-4945-856a-ced17cfcdb5e"))
-          (targets '("cryptroot"))
-          (type luks-device-mapping))))
-  (file-systems
-   (cons* (file-system
-            (mount-point "/")
-            (device "/dev/mapper/cryptroot")
-            (type "ext4")
-            (dependencies mapped-devices))
-          %base-file-systems)))
+  (bootloader (bootloader-configuration
+                (bootloader grub-bootloader)
+                (targets (list "/dev/sda"))
+                (keyboard-layout keyboard-layout)))
+  (swap-devices (list (swap-space
+                        (target (uuid
+                                 "c385eefa-1cb4-40e3-8262-ca744233163f")))))
+
+  ;; The list of file systems that get "mounted".  The unique
+  ;; file system identifiers there ("UUIDs") can be obtained
+  ;; by running 'blkid' in a terminal.
+  (file-systems (cons* (file-system
+                         (mount-point "/")
+                         (device (uuid
+                                  "16e1d446-be55-49de-aaf4-7611ec5be37e"
+                                  'ext4))
+                         (type "ext4")) %base-file-systems)))
