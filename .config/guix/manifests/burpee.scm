@@ -3,5 +3,6 @@
 
 (specifications->manifest '("php@8.1"
 			    "composer"
+			    "mysql"
+			    "redis"
 			    "node"))
-

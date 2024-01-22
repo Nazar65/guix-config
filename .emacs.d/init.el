@@ -127,7 +127,8 @@
   (setq password-cache-expiry 3600)
   (setq nxml-child-indent 4 nxml-attribute-indent 4)
   (setq desktop-path '("~/.emacs.d/" "~" "."))
-  (setq explicit-shell-file-name "/usr/bin/zsh")
+  (setq explicit-shell-file-name "zsh")
+  (setq shell-command-switch "-ic")
   (setq shell-file-name "zsh")
   (setq explicit-zsh-args '("--login" "--interactive"))
   (defun zsh-shell-mode-setup ()
@@ -275,13 +276,12 @@
 
   (defun dw/update-polybar-exwm ()
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook mu4e 1" ))
-    
+
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (server-start)
     (efs/start-panel)
-    (start-process-shell-command "" nil  "shepherd")
     (shell)
     (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))

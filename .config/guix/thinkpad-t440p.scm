@@ -20,6 +20,8 @@
   #:use-module (gnu services databases)
   #:use-module (gnu services mail)
   #:use-module (gnu services linux)
+  #:use-module (gnu home services)
+  #:use-module (gnu home services shells)
   #:use-module (gnu services shepherd)
   #:use-module (guix packages))
 
@@ -90,17 +92,15 @@
 	   (user "root")
 	   (group "smtpq")))
     %setuid-programs))
+
   (packages
    (append
     (list
      (specification->package "emacs")
      (specification->package "emacs-exwm")
      (specification->package "emacs-desktop-environment")
-     (specification->package "notification-daemon")
      (specification->package "pinentry-emacs")
-     (specification->package "zsh")
      (specification->package "perl")
-     (specification->package "direnv")
      (specification->package "libnotify")
      (specification->package "brightnessctl")
      (specification->package "xrandr")
@@ -108,8 +108,6 @@
      (specification->package "password-store")
      (specification->package "gnupg")
      (specification->package "ripgrep")
-     (specification->package "icecat")
-     (specification->package "ungoogled-chromium")
      (specification->package "pantalaimon")
      (specification->package "openvpn")
      (specification->package "font-awesome")
@@ -140,20 +138,18 @@
      (specification->package "rsync")
      (specification->package "binutils")
      (specification->package "openssh")
-     (specification->package "redis")
      (specification->package "usb-modeswitch")
      (specification->package "alsa-utils")
      (specification->package "nss-certs")
      (specification->package "cifs-utils")
      (specification->package "nfs-utils")
-     (specification->package "xcompmgr")
      (specification->package "xinput"))
     %base-packages))
 
   (services
    (append
     (list
-     (service tor-service-type)     
+     (service tor-service-type)
      (service zram-device-service-type
 	      (zram-device-configuration
 	       (size "8G")
