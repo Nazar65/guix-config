@@ -4,7 +4,7 @@
 ;; need to capture the channels being used, as returned by "guix describe".
 ;; See the "Replicating Guix" section in the manual.
 
-(define-module (guix modules base-operating-system)
+(define-module (base)
   #:use-module (gnu)
   #:use-module (guix)
   #:use-module (guix utils)
@@ -12,27 +12,47 @@
   #:use-module (gnu packages audio)
   #:use-module (gnu packages pulseaudio)
   #:use-module (gnu packages admin)
-  #:use-module (gnu packages mail)
-  #:use-module (gnu system setuid)
   #:use-module (gnu services pm)
   #:use-module (gnu services web)
-  #:use-module (gnu services sound)
   #:use-module (gnu services databases)
-  #:use-module (gnu services mail)
   #:use-module (gnu services linux)
   #:use-module (gnu home services)
   #:use-module (gnu home services shells)
   #:use-module (gnu services shepherd)
   #:use-module (guix packages))
 
-(define-public base-operating-system
+(define-public %keyboard-layout
+  (keyboard-layout "us,ua" #:options '("grp:alt_shift_toggle" "ctrl:nocaps")))
 
+(define-public %bare-minimum-packages
+  (append (list
+	   (specification->package "feh")
+	   (specification->package "nss-certs")
+	   (specification->package "pulseaudio")
+	   (specification->package "git")
+           (specification->package "network-manager")
+	   (specification->package "emacs")
+	   (specification->package "emacs-exwm")
+	   (specification->package "emacs-desktop-environment")
+	   (specification->package "pinentry-emacs")
+	   (specification->package "libnotify")
+	   (specification->package "perl")
+	   (specification->package "brightnessctl")
+	   (specification->package "xrandr")
+	   (specification->package "password-store")
+	   (specification->package "gnupg")
+	   (specification->package "ripgrep")
+	   (specification->package "font-awesome")
+	   (specification->package "polybar")
+	   (specification->package "mu"))
+          %base-packages))
+
+(define-public base-operating-system
   (operating-system
     (locale "en_US.utf8")
     (timezone "Europe/Uzhgorod")
     (host-name "goat")
-    (keyboard-layout
-     (keyboard-layout "us,ua" #:options '("grp:alt_shift_toggle" "ctrl:nocaps")))
+    (keyboard-layout %keyboard-layout)
 
     (users
      (cons*
@@ -47,28 +67,7 @@
 
     (groups (cons (user-group (name "openvpn")) %base-groups))
 
-    ;; Install bare-minimum system packages
-    (packages (append (list
-		       (specification->package "feh")
-		       (specification->package "nss-certs")
-		       (specification->package "pulseaudio")
-		       (specification->package "git")
-                       (specification->package "network-manager")
-		       (specification->package "emacs")
-		       (specification->package "emacs-exwm")
-		       (specification->package "emacs-desktop-environment")
-		       (specification->package "pinentry-emacs")
-		       (specification->package "libnotify")
-		       (specification->package "perl")
-		       (specification->package "brightnessctl")
-		       (specification->package "xrandr")
-		       (specification->package "password-store")
-		       (specification->package "gnupg")
-		       (specification->package "ripgrep")
-		       (specification->package "font-awesome")
-		       (specification->package "polybar")
-		       (specification->package "mu"))
-                    %base-packages))
+    (packages %bare-minimum-packages)
 
     (services
      (append
@@ -89,17 +88,20 @@
 		 (tlp-default-mode "BAT")
 		 (cpu-scaling-governor-on-ac
 		  (list "performance"))
-		 (sched-powersave-on-bat? #t))))))
+		 (sched-powersave-on-bat? #t))))
+      (set-xorg-configuration
+       (xorg-configuration
+	(keyboard-layout %keyboard-layout)))))
 
     (bootloader (bootloader-configuration
                  (bootloader grub-bootloader)
                  (target "/dev/sda")
-                 (keyboard-layout keyboard-layout)))
+                 (keyboard-layout %keyboard-layout)))
 
     (file-systems (cons*
                    (file-system
+		     (device "none")
                      (mount-point "/")
-                     (device "none")
                      (type "ext4")
                      (check? #f))
                    %base-file-systems))))

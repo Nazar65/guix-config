@@ -4,18 +4,22 @@
 ;; need to capture the channels being used, as returned by "guix describe".
 ;; See the "Replicating Guix" section in the manual.
 
-(define-module (guix thinkpad-t440p)
-  #:use-module (guix modules base-operating-system)
+(define-module (hosts thinkpad-t440p)
+  #:use-module (base)
   #:use-module (gnu)
   #:use-module (guix)
   #:use-module (guix utils)
+  #:use-module (gnu services sound)
+  #:use-module (gnu services mail)
+  #:use-module (gnu system setuid)
+  #:use-module (gnu packages mail)
   #:use-module (guix packages))
 
 (use-service-modules base dbus desktop networking xorg)
 
 (define huawei-usb-modem-udev-rule
   (file->udev-rule "90-huawei-usb-modem-rule.rules"
-		   (local-file "udev/60-usb_modeswitch.rules")))
+		   (local-file "../udev/60-usb_modeswitch.rules")))
 
 (define %my-desktop-services
   (modify-services
@@ -37,6 +41,7 @@
       (inherit config)
       (handle-power-key 'suspend)
       (handle-lid-switch-external-power 'suspend)))))
+
 
 (operating-system
   (inherit base-operating-system)
@@ -95,17 +100,18 @@
      (specification->package "cifs-utils")
      (specification->package "nfs-utils")
      (specification->package "xinput"))
-    %base-packages))
+    %bare-minimum-packages))
 
   (services
    (append
     (list
      (service opensmtpd-service-type
               (opensmtpd-configuration
-               (config-file (local-file "my-smtpd.conf"))))
+               (config-file (local-file "../my-smtpd.conf"))))
      
      (set-xorg-configuration
       (xorg-configuration
+       (keyboard-layout %keyboard-layout)
        (extra-config (list (string-join
 	                    '("Section \"InputClass\""
                               "Identifier \"Synaptics TM3053-003\""
@@ -117,8 +123,7 @@
 			      "Identifier \"TPPS/2 IBM TrackPoint\""
 			      "Option \"AccelSpeed\" \"1\""
 			      "EndSection") "\n"
-			      )))
-       (keyboard-layout keyboard-layout))))
+			      ))))))
     %my-desktop-services))
 
   (swap-devices (list (swap-space
@@ -129,5 +134,8 @@
   ;; file system identifiers there ("UUIDs") can be obtained
   ;; by running 'blkid' in a terminal.
   (file-systems (cons* (file-system
-                         (device (uuid "16e1d446-be55-49de-aaf4-7611ec5be37e" 'ext4)))
+                         (device (uuid "16e1d446-be55-49de-aaf4-7611ec5be37e" 'ext4))
+			 (mount-point "/")
+			 (type "ext4")
+			 (check? #f))
 		       %base-file-systems)))

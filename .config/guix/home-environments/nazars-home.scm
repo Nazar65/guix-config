@@ -6,7 +6,12 @@
 
 (use-modules
  (gnu home)
+ (gnu packages chromium)
+ (gnu packages gnuzilla)
+ (gnu packages lxqt)
+ (gnu packages pulseaudio)
  (gnu packages gnome)
+ (gnu packages vpn)
  (gnu packages xorg)
  (gnu packages matrix)
  (gnu packages)
@@ -20,18 +25,17 @@
  
 (home-environment
  (packages
-  (specifications->packages
-   (list "zsh-completions"
-	 "zsh-syntax-highlighting"
-	 "zsh"
-	 "direnv"
-	 "ungoogled-chromium"
-	 "pavucontrol"
-	 "notification-daemon"
-	 "xcompmgr"
-	 "openvpn"
-	 "pantalaimon"
-	 "icecat")))
+   (list zsh-completions
+	 zsh-syntax-highlighting
+	 zsh
+	 direnv
+	 ungoogled-chromium
+	 pavucontrol
+	 notification-daemon
+	 xcompmgr
+	 openvpn
+	 pantalaimon
+	 icecat))
  
  (services
   (list
@@ -75,7 +79,7 @@
    (service home-zsh-service-type
             (home-zsh-configuration
              (zshrc (list
-		     (local-file "../../.zshrc" "zshrc")
+		     (local-file "../../../.zshrc" "zshrc")
                      ;; This loads liquidprompt
                      (mixed-text-file "liquidprompt"
                                       "[[ $- = *i* ]] && source " liquidprompt "/share/liquidprompt/liquidprompt")

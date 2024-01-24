@@ -73,6 +73,11 @@
   :straight (:type git :host codeberg :repo "emacs-weirdware/lemon")
   :config (lemon-mode 1))
 
+(use-package direnv
+  :straight (:type git :host github :repo "wbolster/emacs-direnv")
+  :config
+  (direnv-mode))
+
 (use-package emacs
   :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)
@@ -134,6 +139,7 @@
   (defun zsh-shell-mode-setup ()
     (setq-local comint-process-echoes t))
   (add-hook 'shell-mode-hook #'zsh-shell-mode-setup)
+
   (global-unset-key "\C-z")
   (global-set-key "\C-z" 'advertised-undo))
 
@@ -350,12 +356,8 @@
   :mode (("\\.[Ss][Cc][Mm]\\'" . scheme-mode))
   :config
   (with-eval-after-load 'geiser-guile
-    (add-to-list 'geiser-guile-load-path "~/guix")))
-
-(use-package direnv
-  :straight (:host github :repo "wbolster/emacs-direnv")
- :config
- (direnv-mode))
+    (add-to-list 'geiser-guile-load-path "~/guix")
+    (add-to-list 'geiser-guile-load-path "~/guix-system/.config/guix")))
 
 (use-package marginalia
   :after vertico
