@@ -17,7 +17,7 @@
  (gnu home services shells)
  (gnu packages shellutils)
  (gnu packages shells))
-
+ 
 (home-environment
  (packages
   (specifications->packages
@@ -32,7 +32,7 @@
 	 "openvpn"
 	 "pantalaimon"
 	 "icecat")))
-
+ 
  (services
   (list
    (service home-shepherd-service-type

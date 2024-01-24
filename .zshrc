@@ -1,6 +1,10 @@
 eval "$(direnv hook zsh)"
 alias guix-package-burpee='guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/burpee.scm --profile=/home/nazar/.guix-extra-profiles/burpee/'
+alias guix-package-reinders='guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/reinders.scm --profile=/home/nazar/.guix-extra-profiles/reinders/'
 alias ssh-burppe-production='ssh 6.ent-j5axkcqyhe6rg-production-vohbr3y@ssh.us-5.magento.cloud'
 alias ssh-burppe-staging='ssh 6.ent-j5axkcqyhe6rg-staging-5em2ouy@ssh.us-5.magento.cloud'
-alias guix-reconfigure-t440p='sudo guix system reconfigure ~/guix-system/.config/guix/thinkpad-t440p.scm'
-alias guix-reconfigure-nazars-home='guix home reconfigure ~/guix-system/.config/guix/nazars-home.scm'
+alias ssh-reinders-production='ssh 1.ent-t45edsgrjclvi-production-vohbr3y@ssh.us-5.magento.cloud'
+alias ssh-reinders-staging='ssh 1.ent-t45edsgrjclvi-staging-5em2ouy@ssh.us-5.magento.cloud'
+alias guix-reconfigure-t440p='sudo guix system reconfigure ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm'
+alias guix-reconfigure-x220='sudo guix system reconfigure ~/guix-system/.config/guix/hosts/thinkpad-x220.scm'
+alias guix-reconfigure-nazars-home='guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm'

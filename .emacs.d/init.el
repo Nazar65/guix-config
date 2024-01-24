@@ -346,6 +346,17 @@
   :straight (vertico :files (:defaults "extensions/*.el"))
   :init (vertico-mode))
 
+(use-package geiser-guile
+  :mode (("\\.[Ss][Cc][Mm]\\'" . scheme-mode))
+  :config
+  (with-eval-after-load 'geiser-guile
+    (add-to-list 'geiser-guile-load-path "~/guix")))
+
+(use-package direnv
+  :straight (:host github :repo "wbolster/emacs-direnv")
+ :config
+ (direnv-mode))
+
 (use-package marginalia
   :after vertico
   :init(marginalia-mode)
@@ -672,9 +683,11 @@
   :hook ((ement-room-list-mode . emojify-mode)
 	 (ement-room-mode . emojify-mode))
   :config
+  (defun efs/ement-connect ()
+      (interactive)
+      (ement-connect :uri-prefix "http://localhost:8009"))
   (setf use-default-font-for-symbols nil)
-  (set-fontset-font t 'unicode "Noto Emoji" nil 'append)
-  (ement-connect :uri-prefix "http://localhost:8009"))
+  (set-fontset-font t 'unicode "Noto Emoji" nil 'append))
 
 (use-package slack
   :straight (:host github :repo "Konubinix/emacs-slack")
@@ -718,7 +731,7 @@
 		(if (slack-message-notify-p message room team)
 		    (async-start
 		     (lambda ()
-		       (play-sound-file "~/.dotfiles/Sounds/Slack-Notification-Tone.au")
+		       (play-sound-file "~/guix-system/Sounds/Slack-Notification-Tone.au")
 		       'ignore))))))
 
 (use-package alert
