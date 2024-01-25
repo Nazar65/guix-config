@@ -23,17 +23,13 @@
 
 (define %my-desktop-services
   (modify-services
-      %desktop-services
+      %base-desktop-services
     (udev-service-type
      config => (udev-configuration
                 (inherit config)
 	        (rules (append
 		        (udev-configuration-rules config)
 		        (list huawei-usb-modem-udev-rule)))))
-    (pulseaudio-service-type
-     config =>
-     (pulseaudio-configuration
-      (inherit config)))
     
     (elogind-service-type
      config =>
@@ -46,7 +42,8 @@
 (operating-system
   (inherit base-operating-system)
   (host-name "t440p")
-  
+  (groups (cons (user-group (name "openvpn")) %base-groups))
+
   (essential-services
    (modify-services
        (operating-system-default-essential-services this-operating-system)
@@ -108,7 +105,6 @@
      (service opensmtpd-service-type
               (opensmtpd-configuration
                (config-file (local-file "../my-smtpd.conf"))))
-     
      (set-xorg-configuration
       (xorg-configuration
        (keyboard-layout %keyboard-layout)
@@ -124,7 +120,7 @@
 			      "Option \"AccelSpeed\" \"1\""
 			      "EndSection") "\n"
 			      ))))))
-    %my-desktop-services))
+    %base-desktop-services))
 
   (swap-devices (list (swap-space
                        (target (uuid

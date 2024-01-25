@@ -13,16 +13,41 @@
   #:use-module (gnu packages pulseaudio)
   #:use-module (gnu packages admin)
   #:use-module (gnu services pm)
+  #:use-module (gnu services networking)
+  #:use-module (gnu services sound)
+  #:use-module (gnu services desktop)
   #:use-module (gnu services web)
+  #:use-module (gnu services xorg)
   #:use-module (gnu services databases)
   #:use-module (gnu services linux)
-  #:use-module (gnu home services)
-  #:use-module (gnu home services shells)
-  #:use-module (gnu services shepherd)
   #:use-module (guix packages))
 
 (define-public %keyboard-layout
-  (keyboard-layout "us,ua" #:options '("grp:alt_shift_toggle" "ctrl:nocaps")))
+  (keyboard-layout "us,ua"
+		   #:model "thinkpad"
+		   #:options '("grp:alt_shift_toggle" "ctrl:nocaps")))
+
+(define-public %base-desktop-services
+  (append
+   (list
+    (service tor-service-type)
+    (service zram-device-service-type
+	     (zram-device-configuration
+	      (size "8G")
+	      (compression-algorithm 'zstd)))
+    (service ladspa-service-type
+	     (ladspa-configuration (plugins (list swh-plugins))))
+    (service bluetooth-service-type
+	     (bluetooth-configuration
+	      (auto-enable? #t)))
+    (service tlp-service-type
+	     (tlp-configuration
+	      (cpu-boost-on-ac? #t)
+	      (tlp-default-mode "BAT")
+	      (cpu-scaling-governor-on-ac
+	       (list "performance"))
+	      (sched-powersave-on-bat? #t))))
+   %desktop-services))
 
 (define-public %bare-minimum-packages
   (append (list
@@ -62,41 +87,16 @@
        (group "users")
        (home-directory "/home/nazar")
        (supplementary-groups
-	'("wheel" "netdev" "audio" "video" "netdev")))
+	'("wheel" "netdev" "audio" "video")))
       %base-user-accounts))
 
-    (groups (cons (user-group (name "openvpn")) %base-groups))
-
     (packages %bare-minimum-packages)
-
-    (services
-     (append
-      (list
-       (service tor-service-type)
-       (service zram-device-service-type
-		(zram-device-configuration
-		 (size "8G")
-		 (compression-algorithm 'zstd)))       
-       (service ladspa-service-type
-		(ladspa-configuration (plugins (list swh-plugins))))
-       (service bluetooth-service-type
-		(bluetooth-configuration
-		 (auto-enable? #t)))
-       (service tlp-service-type
-		(tlp-configuration
-		 (cpu-boost-on-ac? #t)
-		 (tlp-default-mode "BAT")
-		 (cpu-scaling-governor-on-ac
-		  (list "performance"))
-		 (sched-powersave-on-bat? #t))))
-      (set-xorg-configuration
-       (xorg-configuration
-	(keyboard-layout %keyboard-layout)))))
+    (services %base-desktop-services)
 
     (bootloader (bootloader-configuration
                  (bootloader grub-bootloader)
                  (target "/dev/sda")
-                 (keyboard-layout %keyboard-layout)))
+                 (keyboard-layout keyboard-layout)))
 
     (file-systems (cons*
                    (file-system
