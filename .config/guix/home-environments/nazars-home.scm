@@ -22,20 +22,20 @@
  (gnu home services shells)
  (gnu packages shellutils)
  (gnu packages shells))
- 
+
 (home-environment
  (packages
-   (list zsh-completions
-	 zsh-syntax-highlighting
-	 zsh
-	 direnv
-	 ungoogled-chromium
-	 pavucontrol
-	 notification-daemon
-	 xcompmgr
-	 openvpn
-	 pantalaimon
-	 icecat))
+  (list zsh-completions
+	zsh-syntax-highlighting
+	zsh
+	direnv
+	ungoogled-chromium
+	pavucontrol
+	notification-daemon
+	xcompmgr
+	openvpn
+	pantalaimon
+	icecat))
  
  (services
   (list
@@ -47,9 +47,8 @@
 		(documentation "Run notification-daemon™")
 		(provision '(notification-daemon))
 		(start #~(make-forkexec-constructor
-                          (list #$(file-append notification-daemon "/libexec/notification-daemon")
-                                "-r")))
-		 (stop #~(make-kill-destructor))
+                          (list #$(file-append notification-daemon "/libexec/notification-daemon"))))
+		(stop #~(make-kill-destructor))
 		;; Needs gpg key to unlock.
 		(auto-start? #t)
 		(respawn? #f))
@@ -62,7 +61,7 @@
 				"-t-6"
 				"-l-6"
 				"-o.1")))
-		 (stop #~(make-kill-destructor))
+		(stop #~(make-kill-destructor))
 		;; Needs gpg key to unlock.
 		(auto-start? #t)
 		(respawn? #f))
@@ -84,5 +83,4 @@
                      (mixed-text-file "liquidprompt"
                                       "[[ $- = *i* ]] && source " liquidprompt "/share/liquidprompt/liquidprompt")
 		     (mixed-text-file "powerline-theme"
-                                           "source " liquidprompt "/share/liquidprompt/themes/powerline/powerline.theme")))))
-   )))
+                                      "source " liquidprompt "/share/liquidprompt/themes/powerline/powerline.theme"))))))))
