@@ -78,6 +78,13 @@
   :config
   (direnv-mode))
 
+(use-package pinentry
+  :straight t
+  :config
+  (setq epa-pinentry-mode 'loopback)
+  :init
+  (pinentry-start))
+
 (use-package emacs
   :straight (:type built-in)
   :bind (("M-f"     . 'forward-to-word)
@@ -92,7 +99,6 @@
                             (let ((startup-time (float-time (time-subtract after-init-time before-init-time))))
                               (message "Emacs ready in %.2f seconds with %d garbage collections." startup-time gcs-done)))))
   :init
-  (pinentry-start)
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
   (tooltip-mode 0)

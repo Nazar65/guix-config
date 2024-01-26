@@ -9,6 +9,8 @@
  (gnu packages chromium)
  (gnu packages gnuzilla)
  (gnu packages lxqt)
+ (gnu packages gnupg)
+ (gnu packages fonts)
  (gnu packages pulseaudio)
  (gnu packages gnome)
  (gnu packages vpn)
@@ -19,26 +21,34 @@
  (guix gexp)
  (gnu home services shepherd)
  (gnu home services)
+ (gnu home services gnupg)
  (gnu home services shells)
  (gnu packages shellutils)
  (gnu packages shells))
-
+ 
 (home-environment
  (packages
-  (list zsh-completions
-	zsh-syntax-highlighting
-	zsh
-	direnv
-	ungoogled-chromium
-	pavucontrol
-	notification-daemon
-	xcompmgr
-	openvpn
-	pantalaimon
-	icecat))
+   (list zsh-completions
+	 zsh-syntax-highlighting
+	 zsh
+	 pinentry-emacs
+	 font-google-noto-emoji
+	 font-awesome
+	 ungoogled-chromium
+	 pavucontrol
+	 notification-daemon
+	 xcompmgr
+	 openvpn
+	 pantalaimon
+	 icecat))
  
  (services
   (list
+   (service home-gpg-agent-service-type
+         (home-gpg-agent-configuration
+          (pinentry-program
+           (file-append pinentry-emacs "/bin/pinentry-emacs"))
+          (ssh-support? #t)))
    (service home-shepherd-service-type
             (home-shepherd-configuration
              (services
@@ -47,8 +57,9 @@
 		(documentation "Run notification-daemon™")
 		(provision '(notification-daemon))
 		(start #~(make-forkexec-constructor
-                          (list #$(file-append notification-daemon "/libexec/notification-daemon"))))
-		(stop #~(make-kill-destructor))
+                          (list #$(file-append notification-daemon "/libexec/notification-daemon")
+                                "-r")))
+		 (stop #~(make-kill-destructor))
 		;; Needs gpg key to unlock.
 		(auto-start? #t)
 		(respawn? #f))
@@ -61,7 +72,7 @@
 				"-t-6"
 				"-l-6"
 				"-o.1")))
-		(stop #~(make-kill-destructor))
+		 (stop #~(make-kill-destructor))
 		;; Needs gpg key to unlock.
 		(auto-start? #t)
 		(respawn? #f))
@@ -83,4 +94,5 @@
                      (mixed-text-file "liquidprompt"
                                       "[[ $- = *i* ]] && source " liquidprompt "/share/liquidprompt/liquidprompt")
 		     (mixed-text-file "powerline-theme"
-                                      "source " liquidprompt "/share/liquidprompt/themes/powerline/powerline.theme"))))))))
+                                           "source " liquidprompt "/share/liquidprompt/themes/powerline/powerline.theme")))))
+   )))
