@@ -105,6 +105,8 @@
   (menu-bar-mode 0)
   (display-time-mode 0)
   (display-battery-mode 0)
+  (server-start)
+  (about-emacs)
   (defun eos/crm-indicator (args)
     (cons (format "[CRM%s] %s"
                   (replace-regexp-in-string
@@ -138,14 +140,6 @@
   (setq password-cache-expiry 3600)
   (setq nxml-child-indent 4 nxml-attribute-indent 4)
   (setq desktop-path '("~/.emacs.d/" "~" "."))
-  (setq explicit-shell-file-name "zsh")
-  (setq shell-command-switch "-ic")
-  (setq shell-file-name "zsh")
-  (setq explicit-zsh-args '("--login" "--interactive"))
-  (defun zsh-shell-mode-setup ()
-    (setq-local comint-process-echoes t))
-  (add-hook 'shell-mode-hook #'zsh-shell-mode-setup)
-
   (global-unset-key "\C-z")
   (global-set-key "\C-z" 'advertised-undo))
 
@@ -292,9 +286,7 @@
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
-    (server-start)
     (efs/start-panel)
-    (shell)
     (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
   (setq exwm-layout-show-all-buffers t)
@@ -501,9 +493,9 @@
   :straight (:type git :host github :repo "iqbalansari/mu4e-alert")
   :init (mu4e-alert-enable-mode-line-display)
   :config
-  (setq mu4e-alert-email-notification-types '(count))
-  (mu4e-alert-set-default-style 'libnotify)
-  (mu4e-alert-enable-notifications))
+  (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
+  (setq mu4e-alert-email-notification-types '(subjects))
+  (mu4e-alert-set-default-style 'libnotify))
 
 (use-package nerd-icons
   :straight (:type git :host github :repo "rainstormstudio/nerd-icons.el"))

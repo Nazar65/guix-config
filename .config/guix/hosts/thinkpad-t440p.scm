@@ -71,6 +71,7 @@
   (packages
    (append
     (list
+     (specification->package "direnv")
      (specification->package "offlineimap3")
      (specification->package "clojure")
      (specification->package "clojure-tools")

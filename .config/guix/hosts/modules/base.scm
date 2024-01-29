@@ -59,8 +59,6 @@
 	   (specification->package "emacs")
 	   (specification->package "emacs-exwm")
 	   (specification->package "emacs-desktop-environment")
-	   (specification->package "pinentry-emacs")
-	   (specification->package "libnotify")
 	   (specification->package "perl")
 	   (specification->package "brightnessctl")
 	   (specification->package "xrandr")
