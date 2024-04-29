@@ -1,0 +1,7 @@
+.emacs.d/.cache/
+.emacs.d/auto-save-list/
+.emacs.d/eln-cache/
+.emacs.d/emojis/
+.emacs.d/request/
+.emacs.d/straight/
+.emacs.d/transient/

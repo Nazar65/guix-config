@@ -57,6 +57,7 @@
     (list
      (specification->package "offlineimap3")
      (specification->package "clojure")
+     (specification->package "xl2tpd")
      (specification->package "clojure-tools")
      (specification->package "openjdk")
      (specification->package "imagemagick")
@@ -104,15 +105,13 @@
   (kernel-arguments
    '("intel_idle.max_cstate=4"))
   
-  (swap-devices
-    (list (uuid "7bbca6eb-4aab-459a-be71-3bafa4ff9334")))
+(swap-devices (list (swap-space
+                        (target (uuid
+                                 "7b7de6f2-7b46-4f7e-8077-bbe6555a3246")))))
 
-  (file-systems
-    (cons* (file-system
-             (mount-point "/")
-             (device
-               (uuid "606f3a89-7c64-4845-88c9-e97135810760"
-                     'ext4))
-             (type "ext4")
-	     (check? #f))
-           %base-file-systems)))
+ (file-systems (cons* (file-system
+                         (mount-point "/")
+                         (device (uuid
+                                  "3fe9f4ee-5e8d-4d69-a0b4-e8076ce8d48f"
+                                  'ext4))
+                         (type "ext4")) %base-file-systems)))

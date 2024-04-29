@@ -224,6 +224,8 @@
   :straight (:type git :host github :repo "SebastienWae/app-launcher"))
 
 (defun dw/slack-messages-count ()
+  (if (not (boundp 'slack-teams-by-token))
+	   (format " n/a")
   (let ((teams (hash-table-values slack-teams-by-token)))
     (when (< 0 (length teams))
       (setq alist
@@ -242,7 +244,7 @@
                         (channel-mention-count (cdr channel))
                         (count-messages (+ channel-mention-count thread-mention-count)))
                    (format " %s" (number-to-string count-messages))))
-             alist " "))
+             alist " ")))
 
 
 (defvar efs/polybar-process nil
@@ -287,6 +289,7 @@
   (defun efs/exwm-init-hook ()
     (exwm-workspace-switch-create 1)
     (efs/start-panel)
+    (pixel-scroll-mode)
     (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
   (setq exwm-layout-show-all-buffers t)
@@ -324,7 +327,7 @@
 
       (with-temp-buffer
         (call-process "xrandr" nil t nil)
-        (goto-char (point-min))
+        (goto-char (point-min)
         (re-search-forward xrandr-output-regexp nil 'noerror)
         (setq default-output (match-string 1))
         (forward-line)
@@ -333,7 +336,7 @@
 	  (setq exwm-randr-workspace-output-plist (list 0 default-output))
 	  (call-process
            "xrandr" nil nil nil
-           "--output" (match-string 1) "--primary" "--auto" "--left-of" default-output "--rotate" "normal"
+	   "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
           (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
 

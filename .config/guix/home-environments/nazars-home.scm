@@ -10,6 +10,7 @@
  (gnu packages chromium)
  (gnu packages gnuzilla)
  (gnu packages lxqt)
+ (gnu packages compton)
  (gnu packages gnupg)
  (gnu packages fonts)
  (gnu packages pulseaudio)
@@ -17,7 +18,7 @@
  (gnu packages vpn)
  (gnu packages wm)
  (gnu packages xorg)
- (gnu packages matrix)
+ (gnu packages matrix)guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm 
  (gnu packages)
  (gnu services)
  (guix gexp)
@@ -41,7 +42,7 @@
 	font-awesome
 	ungoogled-chromium
 	pavucontrol
-	xcompmgr
+	compton
 	openvpn
 	pantalaimon
 	icecat))
@@ -59,16 +60,14 @@
              (services
               (list
 	       (shepherd-service
-		(documentation "Run xcompmgr compositor™")
-		(provision '(xcompmgr))
+		(documentation "Run compton compositor™")
+		(provision '(compton))
 		(start #~(make-forkexec-constructor
-                          (list #$(file-append xcompmgr "/bin/xcompmgr")
-                                "-c"
-				"-t-6"
-				"-l-6"
-				"-o.1")))
+                          (list #$(file-append compton "/bin/compton")
+				"--backend" "glx"
+				"--vsync" "opengl-swc")
+			  #:log-file "/home/nazar/.config/shepherd/compton-daemon.log"))
 		(stop #~(make-kill-destructor))
-		;; Needs gpg key to unlock.
 		(auto-start? #t)
 		(respawn? #f))
 	       (shepherd-service
