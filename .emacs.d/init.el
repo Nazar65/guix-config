@@ -225,8 +225,8 @@
 
 (defun dw/slack-messages-count ()
   (if (not (boundp 'slack-teams-by-token))
-	   (format " n/a")
-  (let ((teams (hash-table-values slack-teams-by-token)))
+      (format " n/a")
+    (let ((teams (hash-table-values slack-teams-by-token)))
     (when (< 0 (length teams))
       (setq alist
             (mapcar #'(lambda (e)
@@ -327,7 +327,7 @@
 
       (with-temp-buffer
         (call-process "xrandr" nil t nil)
-        (goto-char (point-min)
+        (goto-char (point-min))
         (re-search-forward xrandr-output-regexp nil 'noerror)
         (setq default-output (match-string 1))
         (forward-line)
