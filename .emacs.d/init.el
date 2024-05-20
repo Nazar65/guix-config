@@ -51,6 +51,22 @@
            (wallpaper-cycle-interval 45)
            (wallpaper-cycle-directory "~/Pictures/wallpapers")))
 
+(use-package org-jira
+  :straight (:type git :host github :repo "ahungry/org-jira")
+  :config
+  (setq jiralib-url "https://burpeeit.atlassian.net")
+  (setq jiralib-update-issue-fields-exclude-list '(reporter))
+  (setq org-jira-custom-jqls
+  '(
+    (:jql " project = MAG AND assignee = currentUser() AND Sprint = 84 AND status IN ('Code Review','Ready for Dev','Ready for Code Review','In Dev',New) ORDER BY created DESC "
+          :limit 50
+          :filename "nazars-current-tasks")
+    ))
+  (defconst jiralib-token
+    '("Cookie" . (auth-source-pick-first-password
+                  :host "burpeeit.atlassian.com"
+                  :user "cookie" :type 'netrc :max 1))))
+
 (use-package desktop-environment
   :straight (:type git :host github :repo "DamienCassou/desktop-environment")
   :after exwm
@@ -69,35 +85,27 @@
 (use-package restclient
   :straight (:type git :host github :repo "pashky/restclient.el"))
 
-(use-package lemon
-  :straight (:type git :host codeberg :repo "emacs-weirdware/lemon")
-  :config (lemon-mode 1))
-
 (use-package direnv
-  :straight (:type git :host github :repo "wbolster/emacs-direnv")
-  :config
-  (direnv-mode))
+  :straight (:type git :host github :repo "wbolster/emacs-direnv"))
 
 (use-package pinentry
   :straight t
+  :after emacs
   :config
   (setq epa-pinentry-mode 'loopback)
-  :init
-  (pinentry-start))
+  :init)
 
 (use-package emacs
-  :straight (:type built-in)
+  :straight t
   :bind (("M-f"     . 'forward-to-word)
          ("M-b"     . 'backward-to-word)
          ("C-!"     . 'kill-this-buffer)
          ("C-<f5>"  . display-line-numbers-mode)
          ("C-c d"   . 'local/duplicate-start-of-line-or-region)
          ([remap dabbrev-expand] . 'hippie-expand))
-  :mode (("\\.[Ee][Ll]\\'" . emacs-lisp-mode))
-  :hook ((before-save . delete-trailing-whitespaces)
-         (emacs-startup . (lambda ()
-                            (let ((startup-time (float-time (time-subtract after-init-time before-init-time))))
-                              (message "Emacs ready in %.2f seconds with %d garbage collections." startup-time gcs-done)))))
+  :mode (("\\.[Ee][Ll]\\'" . (lambda ()
+                               (emacs-lisp-mode)
+			       (display-line-numbers-mode))))
   :init
   (scroll-bar-mode 0)
   (tool-bar-mode 0)
@@ -105,41 +113,29 @@
   (menu-bar-mode 0)
   (display-time-mode 0)
   (display-battery-mode 0)
-  (server-start)
-  (about-emacs)
-  (defun eos/crm-indicator (args)
-    (cons (format "[CRM%s] %s"
-                  (replace-regexp-in-string
-                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-                   crm-separator)
-                  (car args))
-          (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'eos/crm-indicator)
-  (setq read-extended-command-predicate
-        #'command-completion-default-include-p)
-  (setq enable-recursive-minibuffers t)
   :custom
-  (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
-  (setq file-name-handler-alist nil)
-  (setq indent-tabs-mode nil)
-  (nsm-settings-file "~/.emacs.d/network-security.data")
+  (read-extended-command-predicate
+        #'command-completion-default-include-p)
+  (enable-recursive-minibuffers t)
+  (byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
+  (file-name-handler-alist nil)
+  (indent-tabs-mode nil)
   (history-delete-duplicates t)
   (display-time-default-load-average nil)
   (history-length 600)
   (put 'dired-find-alternate-file 'disabled nil)
+  (warning-minimum-level :emergency)
+  (display-time-mail-string "")
+  (display-time-day-and-date nil)
+  (display-time-24hr-format nil)
+  (undo-limit 800000)
+  (undo-strong-limit 12000000)
+  (undo-outer-limit 120000000)
+  (password-cache t)
+  (password-cache-expiry 3600)
+  (nxml-child-indent 4 nxml-attribute-indent 4)
+  (desktop-path '("~/.emacs.d/" "~" "."))
   :config
-  (setq epa-pinentry-mode 'loopback)
-  (setq warning-minimum-level :emergency)
-  (setq display-time-mail-string "")
-  (setq display-time-day-and-date nil)
-  (setq display-time-24hr-format nil)
-  (setq undo-limit 800000)
-  (setq undo-strong-limit 12000000)
-  (setq undo-outer-limit 120000000)
-  (setq password-cache t)
-  (setq password-cache-expiry 3600)
-  (setq nxml-child-indent 4 nxml-attribute-indent 4)
-  (setq desktop-path '("~/.emacs.d/" "~" "."))
   (global-unset-key "\C-z")
   (global-set-key "\C-z" 'advertised-undo))
 
@@ -216,7 +212,7 @@
 (defun dw/polybar-mail-count (max-count)
   (let ((mail-count (shell-command-to-string
                      (format "mu find --nocolor -n %s \"%s\" | wc -l" max-count dw/mu4e-inbox-query))))
-    (if (string-match "error" (string-trim mail-count))
+    (if (string-match "no matches" (string-trim mail-count))
         (setq mail-count "0"))
     (format " %s" (string-trim mail-count))))
 
@@ -287,11 +283,16 @@
 
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
+    (server-start)
     (exwm-workspace-switch-create 1)
     (efs/start-panel)
     (pixel-scroll-mode)
     (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
+    (epa-file-enable)
+    (pinentry-start)
+    (direnv-mode)
+    (about-emacs)
   (setq exwm-layout-show-all-buffers t)
   (setq exwm-input-global-keys
         `(([s-print] . desktop-environment-screenshot-part)
@@ -472,9 +473,15 @@
 
 (use-package doom-themes
   :straight t
-  :init(load-theme 'doom-one t)
+  :init(load-theme 'doom-dark+ t)
   :config
   (doom-themes-visual-bell-config))
+
+(use-package org-modern
+  :straight (:type git :host github :repo "minad/org-modern")
+  :config
+  (add-hook 'org-mode-hook #'org-modern-mode)
+  (add-hook 'org-agenda-finalize-hook #'org-modern-agenda))
 
 (use-package org
   :straight (:type built-in))
@@ -502,6 +509,11 @@
 
 (use-package nerd-icons
   :straight (:type git :host github :repo "rainstormstudio/nerd-icons.el"))
+
+(use-package magit-file-icons
+  :straight (:type git :host github :repo "gekoke/magit-file-icons")
+  :init
+  (magit-file-icons-mode 1))
 
 (use-package doom-modeline
   :straight (:type git :host github :repo "seagle0128/doom-modeline")
@@ -569,11 +581,23 @@
 ;; PHP settings
 ;; ===============================================
 
-(use-package php-doc-block
+(use-package php-cs-fixer
   :after php-mode
+  :straight (:type git :repo "Nazar65/emacs-php-cs-fixer")
+  :hook ((before-save . php-cs-fixer-hook))
+  :custom
+  (php-cs-fixer-rules-config-file "/home/nazar/.config/php/.php-cs-fixer.dist.php")
+  :config
+  (defun php-cs-fixer-hook ()
+  (when (and (stringp buffer-file-name)
+             (string-match "\\.php\\'" buffer-file-name))
+    (add-hook 'before-save-hook 'php-cs-fixer-before-save nil 'make-it-local))))
+
+(use-package php-doc-block
   :straight (:type git
                    :host github
                    :repo "moskalyovd/emacs-php-doc-block")
+  :after php-mode
   :config
   (define-key php-mode-map (kbd "<C-tab>") 'php-doc-block))
 
@@ -597,11 +621,7 @@
   :straight (:type git :host github :repo "emacs-php/php-mode")
   :init (setq php-mode-coding-style 'psr2)
   :config
-  (add-hook 'php-mode-hook 'display-line-numbers-mode)
-  (add-hook 'php-mode-hook
-            (lambda ()
-              (add-hook 'before-save-hook 'php-cs-fixer-before-save)
-              (add-hook 'before-save-hook 'delete-trailing-whitespace))))
+  (add-hook 'php-mode-hook 'display-line-numbers-mode))
 
 ;; Flycheck to check syntax
 (use-package flycheck
@@ -638,6 +658,11 @@
 
 (use-package json-navigator
   :commands json-navigator-navigate-region)
+
+(use-package tree-sitter
+  :hook ('php-mode . 'tree-sitter-mode))
+
+(use-package tree-sitter-langs)
 
 (use-package eglot
   :straight (:host github :repo "joaotavora/eglot")
@@ -683,12 +708,13 @@
 
 (use-package ement
   :straight (:host github :repo "alphapapa/ement.el")
+  :init
+  (defun efs/ement-connect ()
+    (interactive)
+    (ement-connect :uri-prefix "http://localhost:8009"))
   :hook ((ement-room-list-mode . emojify-mode)
 	 (ement-room-mode . emojify-mode))
   :config
-  (defun efs/ement-connect ()
-      (interactive)
-      (ement-connect :uri-prefix "http://localhost:8009"))
   (setf use-default-font-for-symbols nil)
   (set-fontset-font t 'unicode "Noto Emoji" nil 'append))
 
@@ -775,7 +801,8 @@
   :mode (("\\.js\\'" . js2-mode)
          ("\\.jsx\\'" . js2-jsx-mode))
   :config
-  (add-hook 'before-save-hook #'js2-before-save-hook))
+   (add-hook 'js2-mode-hook
+        (lambda ())))
 
 (provide 'init)
 ;;; init.el ends here

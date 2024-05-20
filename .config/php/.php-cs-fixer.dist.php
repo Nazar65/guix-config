@@ -18,10 +18,15 @@ $finder = PhpCsFixer\Finder::create()
 
 return (new PhpCsFixer\Config())
     ->setFinder($finder)
+    ->setCacheFile('/home/nazar/.emacs.d/php-cs-fixer/.php_cs.cache')
     ->setRules([
         '@PSR2' => true,
         'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'one'],
+        'method_argument_space' => [
+            'attribute_placement' => 'standalone',
+            'on_multiline' => 'ensure_fully_multiline'
+        ],
         'include' => true,
         'no_spaces_around_offset' => true,
         'new_with_braces' => true,

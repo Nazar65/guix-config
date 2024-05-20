@@ -16,9 +16,10 @@
  (gnu packages pulseaudio)
  (gnu packages gnome)
  (gnu packages vpn)
+ (gnu packages password-utils)
  (gnu packages wm)
  (gnu packages xorg)
- (gnu packages matrix)guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm 
+ (gnu packages matrix)
  (gnu packages)
  (gnu services)
  (guix gexp)
@@ -36,17 +37,19 @@
 	zsh-syntax-highlighting
 	zsh
 	libnotify
+	direnv
 	dunst
 	pinentry-emacs
 	font-google-noto-emoji
 	font-awesome
 	ungoogled-chromium
+        browserpass-native
 	pavucontrol
 	compton
 	openvpn
 	pantalaimon
 	icecat))
- 
+
  (services
   (list
    (service home-gpg-agent-service-type
@@ -74,7 +77,7 @@
 		(documentation "Run pantalaimon™")
 		(provision '(pantalaimon))
 		(start #~(make-forkexec-constructor
-                          (list #$(file-append pantalaimon "/bin/pantalaimon"))))		
+                          (list #$(file-append pantalaimon "/bin/pantalaimon"))))
 		(stop #~(make-kill-destructor))
 		;; Needs gpg key to unlock.
 		(auto-start? #t)
@@ -92,21 +95,17 @@
    (service home-bash-service-type
             (home-bash-configuration
 	     (aliases '(
+			("magento-cloud" . "/home/nazar/.magento-cloud/bin/magento-cloud")
+			("build-container" . "guix system container ~/guix-system/.config/guix/containers/web-development/php/burpee.scm --network --share=$HOME/Projects/burpee=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/")
 			("reconfigure-nazars-home" . "guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm")
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")
 			("package-burpee" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/burpee.scm --profile=/home/nazar/.guix-extra-profiles/burpee/")
-			("package-reinders" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/reinders.scm --profile=/home/nazar/.guix-extra-profiles/reinders/")
-			("ssh-burppe-production" . "ssh 6.ent-j5axkcqyhe6rg-production-vohbr3y@ssh.us-5.magento.cloud")
-			("ssh-burppe-staging" . "ssh 6.ent-j5axkcqyhe6rg-staging-5em2ouy@ssh.us-5.magento.cloud")
-			("ssh-reinders-production" . "ssh 1.ent-t45edsgrjclvi-production-vohbr3y@ssh.us-5.magento.cloud")
-			("ssh-reinders-staging" . "ssh 1.ent-t45edsgrjclvi-staging-5em2ouy@ssh.us-5.magento.cloud")))
+			("package-reinders" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/reinders.scm --profile=/home/nazar/.guix-extra-profiles/reinders/")))
 	     (bashrc (list (plain-file "bashrc" "\
                        eval \"$(direnv hook bash)\"\n
                      ")))
              (guix-defaults? #t)
              (bash-profile (list (plain-file "bash-profile" "\
                   export HISTFILE=$XDG_CACHE_HOME/.bash_history")))))
-
-
    )))
