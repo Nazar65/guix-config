@@ -1,7 +1,12 @@
 .emacs.d/.cache/
+.emacs.d/php-cs-fixer/
+.emacs.d/persist/
+.emacs.d/custom.el
+.emacs.d/icons/
 .emacs.d/auto-save-list/
 .emacs.d/eln-cache/
 .emacs.d/emojis/
 .emacs.d/request/
 .emacs.d/straight/
 .emacs.d/transient/
+containers
