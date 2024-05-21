@@ -22,6 +22,20 @@
   (list (string-append "include " config-path ";")))
 
 
+(define %mariadb-state-directory
+  "/var/lib/mysql")
+
+(define set-permissions-gexp
+  (with-imported-modules '((guix build utils))
+    #~(begin
+        (use-modules (guix build utils))
+
+        ;; Set ownership of mariadb state directory.
+        (let ((user (getpw "mysql")))
+          (for-each (lambda (file)
+                      (chown file (passwd:uid user) (passwd:gid user)))
+                    (find-files #$%mariadb-state-directory #:directories? #t))))))
+
 (define-public magento2-container
   (operating-system
    (host-name "magento2-container")
@@ -36,6 +50,9 @@
 		(targets '("/dev/sdX"))))
    (services
     (cons* (service redis-service-type)
+           (simple-service 'set-permissions
+                                   activation-service-type
+                                   set-permissions-gexp)
 	   (service nginx-service-type
 		    (nginx-configuration
 		     (server-blocks
@@ -60,6 +77,5 @@
 
 	   (service mysql-service-type
 		    (mysql-configuration
-		     (socket "/run/mysqld/mysqld.sock")
 		     (auto-upgrade? "#f")))
            %base-services))))

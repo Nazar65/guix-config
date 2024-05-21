@@ -96,7 +96,7 @@
             (home-bash-configuration
 	     (aliases '(
 			("magento-cloud" . "/home/nazar/.magento-cloud/bin/magento-cloud")
-			("build-container" . "guix system container ~/guix-system/.config/guix/containers/web-development/php/burpee.scm --network --share=$HOME/Projects/burpee=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/")
+			("build-container" . "guix system container ~/guix-system/.config/guix/containers/web-development/php/burpee.scm --network --share=$HOME/Projects/burpee=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/ --share=$HOME/db_dumps --share=$HOME/containers/mariadb-state=/var/lib/mysql")
 			("reconfigure-nazars-home" . "guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm")
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")

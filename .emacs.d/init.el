@@ -58,7 +58,7 @@
   (setq jiralib-update-issue-fields-exclude-list '(reporter))
   (setq org-jira-custom-jqls
   '(
-    (:jql " project = MAG AND assignee = currentUser() AND Sprint = 84 AND status IN ('Code Review','Ready for Dev','Ready for Code Review','In Dev',New) ORDER BY created DESC "
+    (:jql " project = MAG AND assignee = currentUser() AND Sprint = 85 AND status IN ('Code Review','Ready for Dev','Ready for Code Review','In Dev',New) ORDER BY created DESC "
           :limit 50
           :filename "nazars-current-tasks")
     ))
@@ -702,16 +702,17 @@
 (use-package emojify
   :commands emojify-mode)
 
-(use-package nix-mode
-  :straight (:host github :repo "NixOS/nix-mode")
-  :mode "\\.nix\\'")
-
 (use-package ement
   :straight (:host github :repo "alphapapa/ement.el")
   :init
   (defun efs/ement-connect ()
     (interactive)
-    (ement-connect :uri-prefix "http://localhost:8009"))
+    (ement-connect
+     :user-id "@nazar.klovanych:matrix.org"
+     :password (auth-source-pick-first-password
+                :host "matrix.org"
+                :user "token" :type 'netrc :max 1))
+     :uri-prefix "http://localhost:8009")
   :hook ((ement-room-list-mode . emojify-mode)
 	 (ement-room-mode . emojify-mode))
   :config
