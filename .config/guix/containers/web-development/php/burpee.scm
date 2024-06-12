@@ -16,7 +16,7 @@
     (packages
     (append
      (list
-      (specification->package "php@8.1")
+      (specification->package "php@8.2")
       (specification->package "mysql")
       (specification->package "redis"))
      %base-packages)))

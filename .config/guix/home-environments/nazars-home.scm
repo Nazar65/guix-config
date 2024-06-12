@@ -15,9 +15,10 @@
  (gnu packages fonts)
  (gnu packages pulseaudio)
  (gnu packages gnome)
+ (gnu packages rust-apps)
  (gnu packages vpn)
- (gnu packages password-utils)
  (gnu packages wm)
+ (gnu packages databases)
  (gnu packages xorg)
  (gnu packages matrix)
  (gnu packages)
@@ -33,17 +34,15 @@
 
 (home-environment
  (packages
-  (list zsh-completions
-	zsh-syntax-highlighting
-	zsh
+  (list emacs-lsp-booster
 	libnotify
 	direnv
+        sqls
 	dunst
 	pinentry-emacs
 	font-google-noto-emoji
 	font-awesome
 	ungoogled-chromium
-        browserpass-native
 	pavucontrol
 	compton
 	openvpn
@@ -96,7 +95,8 @@
             (home-bash-configuration
 	     (aliases '(
 			("magento-cloud" . "/home/nazar/.magento-cloud/bin/magento-cloud")
-			("build-container" . "guix system container ~/guix-system/.config/guix/containers/web-development/php/burpee.scm --network --share=$HOME/Projects/burpee=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/ --share=$HOME/db_dumps --share=$HOME/containers/mariadb-state=/var/lib/mysql")
+                        ("php" . "php -d memory_limit=-1 $*")
+			("build-container" . "build_container() { guix system container ~/guix-system/.config/guix/containers/web-development/php/$1.scm --network --share=$HOME/Projects/$1=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/ --share=$HOME/db_dumps --share=$HOME/containers/mariadb-state=/var/lib/mysql; }; build_container")
 			("reconfigure-nazars-home" . "guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm")
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")

@@ -139,6 +139,23 @@
   (global-unset-key "\C-z")
   (global-set-key "\C-z" 'advertised-undo))
 
+(use-package sql
+  :straight t
+  :custom
+  (sql-connection-alist
+   '((mysql-local-burpee
+      (sql-product 'mysql)
+      (sql-server "127.0.0.1")
+      (sql-user "burpee")
+      (sql-password "burpee")
+      (sql-database "burpee")
+      (sql-port 3306))))
+  :config
+  (setq lsp-sqls-workspace-config-path nil)
+  (setq lsp-sqls-connections
+        '(((driver . "mysql") (dataSourceName . "burpee@tcp(127.0.0.1:3306)/burpee")))))
+
+        
 (use-package tramp
   :straight (:type built-in)
   :config
@@ -339,7 +356,8 @@
            "xrandr" nil nil nil
 	   "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
-          (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output)))))))
+          (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output))))
+      (shell-command "herd restart compton"))))
 
 (use-package async
   :after bytecomp
@@ -477,6 +495,17 @@
   :config
   (doom-themes-visual-bell-config))
 
+
+(use-package eat
+ :straight (:type git
+       :host codeberg
+       :repo "akib/emacs-eat"
+       :files ("*.el" ("term" "term/*.el") "*.texi"
+               "*.ti" ("terminfo/e" "terminfo/e/*")
+               ("terminfo/65" "terminfo/65/*")
+               ("integration" "integration/*")
+               (:exclude ".dir-locals.el" "*-tests.el"))))
+
 (use-package org-modern
   :straight (:type git :host github :repo "minad/org-modern")
   :config
@@ -490,6 +519,7 @@
   :straight (:type git :host github :repo "doublep/logview"))
 
 (use-package mu4e
+  :after exwm
   :straight (:type built-in)
   :init (load "~/.emacs.d/mu4e-config.el")
   :config
@@ -525,30 +555,49 @@
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
   (setq doom-modeline-vcs-max-length 32))
 
-(use-package corfu-popupinfo
-  :straight nil
-  :after corfu
-  :hook (corfu-mode . corfu-popupinfo-mode))
-
-(use-package corfu
-  :straight (:files (:defaults "extensions/*"))
-  :bind (("C-n"     . corfu-next)
-         ("C-p"     . corfu-previous)
-         ("C-q"     . corfu-quick-insert)
-         ("M-p"     . corfu-popupinfo-scroll-down)
-         ("M-n"     . corfu-popupinfo-scroll-up))
-  :init
-  (global-corfu-mode)
-  :custom
-  (corfu-popupinfo-direction '(right left vertical))
+(use-package lsp-mode
   :config
-  (setq corfu-auto  t
-        corfu-auto-prefix 1
-        corfu-quit-no-match nil
-        corfu-preview-current nil
-        corfu-popupinfo-delay 0.3
-        corfu-popupinfo-max-width 70
-        corfu-popupinfo-max-height 20))
+  (setq gc-cons-threshold (* 100 1024 1024)
+        read-process-output-max (* 1024 1024)
+        (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]tmp\\'")
+        treemacs-space-between-root-nodes nil
+        company-idle-delay 0.0
+        company-minimum-prefix-length 1
+        lsp-idle-delay 0.1)
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]generated\\'")
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]pub\\'")
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]var\\'")
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]setup\\'")
+  :hook (php-mode . lsp)
+  :commands lsp)
+
+(use-package lsp-ui
+  :requires lsp-mode flycheck
+  :config
+  (setq
+   lsp-ui-doc-show-with-cursor t
+   lsp-ui-doc-enable t
+   lsp-ui-doc-delay 1
+   lsp-ui-doc-use-childframe t
+   lsp-ui-doc-position 'at-point
+   lsp-ui-doc-include-signature t
+   lsp-ui-flycheck-enable t
+   lsp-ui-flycheck-list-position 'right
+   lsp-ui-flycheck-live-reporting t
+   lsp-ui-peek-enable t
+   lsp-ui-peek-list-width 60
+   lsp-ui-peek-peek-height 25)
+
+(add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+(use-package company
+ :ensure t
+ :config
+ (setq company-idle-delay 0.3)
+ (global-company-mode 1))
+
+(use-package company-lsp
+  :commands company-lsp)
 
 (use-package svg-lib
   :after kind-icon)
@@ -638,7 +687,6 @@
   (web-mode-engines-alist '(("django" . "\\.html\\'")))
   :custom-face
   (web-mode-block-string-face ((t (:inherit font-lock-string-face))))
-  (web-mode-html-attr-value-face ((t (:inherit font-lock-string-face :foreground nil))))
   (web-mode-current-element-highlight-face ((t (:inherit highlight))))
   :mode
   (("\\.phtml\\'"      . web-mode)
@@ -664,29 +712,6 @@
 
 (use-package tree-sitter-langs)
 
-(use-package eglot
-  :straight (:host github :repo "joaotavora/eglot")
-  :hook ((php-mode . eglot-ensure)
-         (js2-mode . eglot-ensure)
-         (json-mode . eglot-ensure)
-         (css-mode . eglot-ensure)
-         (clojure-mode . eglot-ensure))
-  :config
-  (add-to-list 'eglot-server-programs '(php-mode . ("/home/nazar/lsp-servers/intelephense/node_modules/.bin/intelephense" "--stdio")))
-  (add-to-list 'eglot-server-programs '(json-mode . ("/home/nazar/lsp-servers/json-css-html/node_modules/.bin/vscode-json-language-server" "--stdio")))
-  (add-to-list 'eglot-server-programs '(js2-mode . ("/home/nazar/lsp-servers/js-typescript/node_modules/.bin/typescript-language-server" "--stdio")))
-  (add-to-list 'eglot-server-programs '(css-mode . ("/home/nazar/lsp-servers/json-css-html/node_modules/.bin/vscode-css-language-server" "--stdio")))
-  (add-to-list 'eglot-server-programs '(clojure-mode . ("/home/nazar/lsp-servers/clojure/clojure-lsp")))
-  (setq eldoc-echo-area-use-multiline-p t)
-  (setq eglot-confirm-server-initiated-edits nil)
-  (setq eglot-extend-to-xref t))
-
-(use-package eldoc-box
-  :straight (:host github :repo "casouri/eldoc-box")
-  :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode)
-  :after eglot)
-
-
 (use-package sudo-edit
   :bind*
   (("C-x e" . sudo-edit-find-file))
@@ -711,8 +736,8 @@
      :user-id "@nazar.klovanych:matrix.org"
      :password (auth-source-pick-first-password
                 :host "matrix.org"
-                :user "token" :type 'netrc :max 1))
-     :uri-prefix "http://localhost:8009")
+                :user "token" :type 'netrc :max 1)
+     :uri-prefix "http://localhost:8009"))
   :hook ((ement-room-list-mode . emojify-mode)
 	 (ement-room-mode . emojify-mode))
   :config
@@ -796,16 +821,9 @@
 ;; Javascript
 ;; ==============================================
 (use-package js2-mode
-  :straight (:type git :repo "mooz/js2-mode")
-  :hook ((js2-mode . js2-imenu-extras-mode)
-         (js2-mode . js2-highlight-unused-variables-mode))
-  :mode (("\\.js\\'" . js2-mode)
-         ("\\.jsx\\'" . js2-jsx-mode))
-  :config
-   (add-hook 'js2-mode-hook
-        (lambda ())))
-
+  :straight (:type git :repo "mooz/js2-mode"))
 (provide 'init)
 ;;; init.el ends here
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
+(put 'magit-clean 'disabled nil)

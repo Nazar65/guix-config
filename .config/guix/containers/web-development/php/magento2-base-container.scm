@@ -9,6 +9,7 @@
   #:use-module (guix packages))
 
 (define-public %app-root-folder "/srv/http/pub")
+(define-public %webserver-root-folder "/srv/http")
 (define-public %app-front-name '("development.local"))
 (define-public %nginx-config-file-path "/home/nazar/guix-system/.config/nginx/nginx.conf")
 (define-public %active-php-package php81)
@@ -34,7 +35,13 @@
         (let ((user (getpw "mysql")))
           (for-each (lambda (file)
                       (chown file (passwd:uid user) (passwd:gid user)))
-                    (find-files #$%mariadb-state-directory #:directories? #t))))))
+                    (find-files #$%mariadb-state-directory #:directories? #t)))
+        ;; Set ownership of magento root directory.
+        (let ((user (getpw "nazar")))
+          (for-each (lambda (file)
+                      (chown file (passwd:uid user) (passwd:gid user)))
+                    (find-files #$%webserver-root-folder #:directories? #t))))))
+
 
 (define-public magento2-container
   (operating-system
@@ -48,6 +55,13 @@
    (bootloader (bootloader-configuration
 		(bootloader grub-bootloader)
 		(targets '("/dev/sdX"))))
+   (users
+    (cons*
+     (user-account
+      (name "nazar")
+      (comment "Nazar")
+      (group "users"))
+     %base-user-accounts))
    (services
     (cons* (service redis-service-type)
            (simple-service 'set-permissions
