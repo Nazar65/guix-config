@@ -151,9 +151,10 @@
       (sql-database "burpee")
       (sql-port 3306))))
   :config
+  (add-hook 'sql-mode-hook 'lsp)
   (setq lsp-sqls-workspace-config-path nil)
   (setq lsp-sqls-connections
-        '(((driver . "mysql") (dataSourceName . "burpee@tcp(127.0.0.1:3306)/burpee")))))
+        '(((driver . "mysql") (dataSourceName . "burpee:burpee@tcp(127.0.0.1:3306)/burpee")))))
 
         
 (use-package tramp
@@ -356,7 +357,7 @@
            "xrandr" nil nil nil
 	   "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
-          (setq exwm-randr-workspace-output-plist (list 1 (match-string 1) 0 default-output))))
+          (setq exwm-randr-workspace-monitor-plist (list 1 (match-string 1) 0 default-output))))
       (shell-command "herd restart compton"))))
 
 (use-package async
@@ -368,16 +369,17 @@
   :init
   (gcmh-mode 1))
 
-(use-package vertico
-  :straight (vertico :files (:defaults "extensions/*.el"))
-  :init (vertico-mode))
-
 (use-package geiser-guile
   :mode (("\\.[Ss][Cc][Mm]\\'" . scheme-mode))
   :config
   (with-eval-after-load 'geiser-guile
     (add-to-list 'geiser-guile-load-path "~/guix")
     (add-to-list 'geiser-guile-load-path "~/guix-system/.config/guix")))
+
+
+(use-package vertico
+  :straight (vertico :files (:defaults "extensions/*.el"))
+  :init (vertico-mode))
 
 (use-package marginalia
   :after vertico
@@ -403,7 +405,8 @@
          ("C-x K"     . kill-current-buffer)
          ("C-x C-b"  . ibuffer)
          ("C-c s r"  . 'consult-ripgrep)
-         ("C-c s g"  . 'consult-grep)
+         ("C-c s l"  . 'consult-line)
+         ("C-c s g"  . 'rgrep)
          ("C-c s i"  . 'consult-git-grep)
          ("C-c s f"  . 'consult-find))
   :hook (completion-list-mode . consult-preview-at-point-mode)
@@ -556,39 +559,39 @@
   (setq doom-modeline-vcs-max-length 32))
 
 (use-package lsp-mode
+  :straight t
   :config
   (setq gc-cons-threshold (* 100 1024 1024)
         read-process-output-max (* 1024 1024)
-        (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]tmp\\'")
         treemacs-space-between-root-nodes nil
         company-idle-delay 0.0
         company-minimum-prefix-length 1
         lsp-idle-delay 0.1)
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]tmp\\'")
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]generated\\'")
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]pub\\'")
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]var\\'")
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]setup\\'")
-  :hook (php-mode . lsp)
-  :commands lsp)
+  :hook
+  (php-mode . lsp)
+  (js2-mode . lsp))
 
 (use-package lsp-ui
-  :requires lsp-mode flycheck
+  :custom
+  (lsp-ui-doc-show-with-cursor t)
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-delay 1)
+  (lsp-ui-doc-use-childframe t)
+  (lsp-ui-doc-position 'at-point)
+  (lsp-ui-doc-include-signature t)
+  (lsp-ui-flycheck-enable t)
+  (lsp-ui-flycheck-list-position 'right)
+  (lsp-ui-flycheck-live-reporting t)
+  (lsp-ui-peek-enable t)
+  (lsp-ui-peek-list-width 60)
+  (lsp-ui-peek-peek-height 25)
   :config
-  (setq
-   lsp-ui-doc-show-with-cursor t
-   lsp-ui-doc-enable t
-   lsp-ui-doc-delay 1
-   lsp-ui-doc-use-childframe t
-   lsp-ui-doc-position 'at-point
-   lsp-ui-doc-include-signature t
-   lsp-ui-flycheck-enable t
-   lsp-ui-flycheck-list-position 'right
-   lsp-ui-flycheck-live-reporting t
-   lsp-ui-peek-enable t
-   lsp-ui-peek-list-width 60
-   lsp-ui-peek-peek-height 25)
-
-(add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
 
 (use-package company
  :ensure t
@@ -708,7 +711,8 @@
   :commands json-navigator-navigate-region)
 
 (use-package tree-sitter
-  :hook ('php-mode . 'tree-sitter-mode))
+  :hook ('php-mode . 'tree-sitter-mode)
+        ('js2-mode . 'tree-sitter-mode))
 
 (use-package tree-sitter-langs)
 
@@ -821,7 +825,9 @@
 ;; Javascript
 ;; ==============================================
 (use-package js2-mode
-  :straight (:type git :repo "mooz/js2-mode"))
+  :straight (:type git :repo "mooz/js2-mode")
+  :mode (("\\.js$" . js2-mode)))
+
 (provide 'init)
 ;;; init.el ends here
 ;; Local Variables:

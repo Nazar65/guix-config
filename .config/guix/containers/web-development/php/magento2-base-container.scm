@@ -91,5 +91,7 @@
 
 	   (service mysql-service-type
 		    (mysql-configuration
-		     (auto-upgrade? "#f")))
+		     (auto-upgrade? "#f")
+                      (extra-content
+               "secure-file-priv='/tmp/'")))
            %base-services))))

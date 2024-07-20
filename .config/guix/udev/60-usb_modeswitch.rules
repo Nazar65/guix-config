@@ -1,1 +1,0 @@
-ACTION=="add", SUBSYSTEM=="usb", ENV{ID_VENDOR_ID}=="12d1", ENV{ID_MODEL_ID}=="1f01", ENV{VENDORID}="$attr{idVendor}", ENV{PRODUCTID}="$attr{idProduct}" RUN+="/home/nazar/.guix-profile/bin/usb_modeswitch -v '$attr{idVendor}' -p '$attr{idProduct}' -J"

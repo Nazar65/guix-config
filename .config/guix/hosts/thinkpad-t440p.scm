@@ -17,20 +17,10 @@
 
 (use-service-modules base dbus desktop networking xorg)
 
-(define huawei-usb-modem-udev-rule
-  (file->udev-rule "90-huawei-usb-modem-rule.rules"
-		   (local-file "../udev/60-usb_modeswitch.rules")))
-
 (define %my-desktop-services
   (modify-services
       %base-desktop-services
-    (udev-service-type
-     config => (udev-configuration
-                (inherit config)
-	        (rules (append
-		        (udev-configuration-rules config)
-		        (list huawei-usb-modem-udev-rule)))))
-    
+
     (elogind-service-type
      config =>
      (elogind-configuration
