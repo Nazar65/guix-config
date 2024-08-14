@@ -5,7 +5,7 @@
 ;; See the "Replicating Guix" section in the manual.
 
 (define-module (hosts thinkpad-x220)
-  #:use-module (base)
+  #:use-module (desktop-base)
   #:use-module (gnu)
   #:use-module (guix)
   #:use-module (guix utils)

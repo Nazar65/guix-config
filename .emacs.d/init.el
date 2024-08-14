@@ -58,10 +58,20 @@
   (setq jiralib-update-issue-fields-exclude-list '(reporter))
   (setq org-jira-custom-jqls
   '(
-    (:jql " project = MAG AND assignee = currentUser() AND Sprint = 85 AND status IN ('Code Review','Ready for Dev','Ready for Code Review','In Dev',New) ORDER BY created DESC "
+    (:jql " project = MAG AND assignee = currentUser() AND Sprint IN openSprints() AND status IN ('Code Review','Ready for Dev','New','In Design') ORDER BY priority DESC  "
           :limit 50
           :filename "nazars-current-tasks")
+    (:jql " project = MAG AND assignee = currentUser() AND status IN ('To Estimate') ORDER BY priority DESC  "
+          :limit 50
+          :filename "to-estimate-tickets")
+    (:jql " project = MAG AND assignee = currentUser() AND status IN ('Ready for Code Review') AND Sprint IN openSprints() ORDER BY priority DESC "
+          :limit 50
+          :filename "code-review-tickets")
+    (:jql " project = MAG AND assignee = currentUser() AND status IN ('In Dev') AND Sprint IN openSprints() ORDER BY priority DESC "
+          :limit 50
+          :filename "in-dev-tickets")
     ))
+
   (defconst jiralib-token
     '("Cookie" . (auth-source-pick-first-password
                   :host "burpeeit.atlassian.com"
@@ -158,20 +168,16 @@
 
         
 (use-package tramp
-  :straight (:type built-in)
+  :straight t
   :config
-  (setq emacs-persistence-directory (expand-file-name "var/" user-emacs-directory))
-  (let ((dir (expand-file-name "backup" emacs-persistence-directory)))
-    (unless (file-directory-p dir)
-      (make-directory dir t))
-    (setq backup-directory-alist `(("." . ,dir))))
-  (let ((backup-dir (concat emacs-persistence-directory "tramp-backup/")))
-    (setq tramp-persistency-file-name (concat emacs-persistence-directory "tramp")
-	  tramp-backup-directory-alist `(("." . ,backup-dir))
-          tramp-auto-save-directory (concat emacs-persistence-directory "tramp-auto-save/"))
-    (dolist (d (list tramp-auto-save-directory backup-dir))
-      (unless (file-exists-p d)
-	(make-directory d t)))))
+  (connection-local-set-profile-variables
+    'guix-system
+    '((tramp-remote-path . (tramp-own-remote-path))))
+   (connection-local-set-profiles
+    `(:application tramp :protocol "sudo" :machine ,(system-name))
+    'guix-system)
+  (setq tramp-verbose 10)
+  (setq emacs-persistence-directory (expand-file-name "var/" user-emacs-directory)))
 
 (use-package nxml
   :straight (:type built-in)
@@ -226,6 +232,14 @@
 
 (setq dw/mu4e-inbox-query
       "(maildir:/INBOX) AND flag:unread")
+
+(defun dw/polybar-vpn-status ()
+  (let ((vpn-status (shell-command-to-string
+                     "nmcli --mode tabular --terse connection show --active | grep vpn | cut -d ':' -f1"))
+        (result ""))
+    (if (string-match "vpn" vpn-status)
+        (setq result ""))
+    (format "VPN %s" result)))
 
 (defun dw/polybar-mail-count (max-count)
   (let ((mail-count (shell-command-to-string
@@ -298,7 +312,7 @@
 
   (defun dw/update-polybar-exwm ()
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook mu4e 1" ))
-
+    (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook vpn 1" ))
     (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook slack 1" )))
   (defun efs/exwm-init-hook ()
     (server-start)
@@ -395,7 +409,9 @@
 (use-package orderless
   :ensure t
   :custom
-  (completion-styles '(orderless basic))
+  (orderless-matching-styles '(orderless-flex orderless-literal orderless-regexp))
+  (completion-styles '(orderless partial-completion basic))
+  (completion-category-defaults nil)
   (completion-category-overrides '((file (styles basic partial-completion)))))
 
 (use-package consult
@@ -565,6 +581,7 @@
         read-process-output-max (* 1024 1024)
         treemacs-space-between-root-nodes nil
         company-idle-delay 0.0
+        lsp-completion-provider :none
         company-minimum-prefix-length 1
         lsp-idle-delay 0.1)
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]tmp\\'")
@@ -574,6 +591,9 @@
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]setup\\'")
   :hook
   (php-mode . lsp)
+  (lsp-completion-mode . (lambda ()
+                           (setq-local completion-category-defaults
+                                       (assoc-delete-all 'lsp-capf completion-category-defaults))))
   (js2-mode . lsp))
 
 (use-package lsp-ui
@@ -629,6 +649,41 @@
 (use-package cider
   :ensure t
   :commands (cider-mode cider-repl-mode))
+
+;; Golang section
+;; ===============================================
+
+(use-package godoctor)
+(use-package go-mode)
+(use-package go-ts-mode
+  :straight t
+  :mode "\\.go\\'"
+  :preface
+  (defun vd/go-lsp-start()
+    (add-hook 'before-save-hook #'lsp-format-buffer t t)
+    (add-hook 'before-save-hook #'lsp-organize-imports t t)
+    (lsp-deferred))
+  :custom
+  (go-ts-mode-indent-offset 4)
+  :config
+  (add-to-list 'exec-path "~/.guix-home/profile/bin")
+  (setq lsp-go-analyses '(
+                          (nilness . t)
+                          (shadow . t)
+                          (unusedwrite . t)
+                          (fieldalignment . t)
+                          (escape . t)
+                                       )
+        lsp-go-codelenses '(
+                          (test . t)
+                          (tidy . t)
+                          (upgrade_dependency . t)
+                          (vendor . t)
+                          (gc_details . t)
+                          (run_govulncheck . t)))
+  :hook
+  (go-ts-mode . (lambda () (add-hook 'before-save-hook 'gofmt-before-save nil t)))
+  (go-ts-mode . vd/go-lsp-start))
 
 ;; PHP settings
 ;; ===============================================
@@ -712,7 +767,8 @@
 
 (use-package tree-sitter
   :hook ('php-mode . 'tree-sitter-mode)
-        ('js2-mode . 'tree-sitter-mode))
+  ('js2-mode . 'tree-sitter-mode)
+  ('go-ts-mode . 'tree-sitter-mode))
 
 (use-package tree-sitter-langs)
 
@@ -749,7 +805,7 @@
   (set-fontset-font t 'unicode "Noto Emoji" nil 'append))
 
 (use-package slack
-  :straight (:host github :repo "Konubinix/emacs-slack")
+  :straight (:host github :repo "isamert/emacs-slack")
   :config
   (url-cookie-store
    "d"

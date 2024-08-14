@@ -44,6 +44,7 @@
      '(("smtp.gmail.com" 587 "n.klovanych@atwix.com" nil))
    smtpmail-default-smtp-server "smtp.gmail.com"
    smtpmail-smtp-server "smtp.gmail.com"
+   smtpmail-smtp-user "n.klovanych@atwix.com"
    smtpmail-smtp-service 587)
 
 ;; don't keep message buffers around

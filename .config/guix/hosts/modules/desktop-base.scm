@@ -4,7 +4,7 @@
 ;; need to capture the channels being used, as returned by "guix describe".
 ;; See the "Replicating Guix" section in the manual.
 
-(define-module (base)
+(define-module (desktop-base)
   #:use-module (gnu)
   #:use-module (guix)
   #:use-module (guix utils)

@@ -5,11 +5,12 @@
 ;; See the "Replicating Guix" section in the manual.
 
 (define-module (hosts thinkpad-t440p)
-  #:use-module (base)
+  #:use-module (desktop-base)
   #:use-module (gnu)
   #:use-module (guix)
   #:use-module (guix utils)
   #:use-module (gnu services sound)
+  #:use-module (gnu services docker)
   #:use-module (gnu services mail)
   #:use-module (gnu system setuid)
   #:use-module (gnu packages mail)
@@ -93,6 +94,7 @@
   (services
    (append
     (list
+     (service docker-service-type)
      (service opensmtpd-service-type
               (opensmtpd-configuration
                (config-file (local-file "../my-smtpd.conf"))))
@@ -121,7 +123,7 @@
   ;; file system identifiers there ("UUIDs") can be obtained
   ;; by running 'blkid' in a terminal.
   (file-systems (cons* (file-system
-                         (device (uuid "16e1d446-be55-49de-aaf4-7611ec5be37e" 'ext4))
+                         (device (uuid "3fe2ea5f-47d9-4b3c-8a2a-709195c7935d" 'ext4))
 			 (mount-point "/")
 			 (type "ext4")
 			 (check? #f))

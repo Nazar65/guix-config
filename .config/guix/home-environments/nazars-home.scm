@@ -18,6 +18,7 @@
  (gnu packages rust-apps)
  (gnu packages vpn)
  (gnu packages wm)
+ (gnu packages golang)
  (gnu packages databases)
  (gnu packages xorg)
  (gnu packages matrix)
@@ -38,6 +39,8 @@
 	libnotify
 	direnv
         sqls
+        go
+        gopls
 	dunst
 	pinentry-emacs
 	font-google-noto-emoji
@@ -76,7 +79,8 @@
 		(documentation "Run pantalaimon™")
 		(provision '(pantalaimon))
 		(start #~(make-forkexec-constructor
-                          (list #$(file-append pantalaimon "/bin/pantalaimon"))))
+                          (list #$(file-append pantalaimon "/bin/pantalaimon"))
+                          #:log-file "/home/nazar/.config/shepherd/pantalaimon.log"))
 		(stop #~(make-kill-destructor))
 		;; Needs gpg key to unlock.
 		(auto-start? #t)
