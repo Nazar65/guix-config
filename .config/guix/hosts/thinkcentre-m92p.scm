@@ -31,6 +31,7 @@
   (append
    (list
     (service elogind-service-type)
+    (service containerd-service-type)
     (service network-manager-service-type)
     (service wpa-supplicant-service-type)
     (service dbus-root-service-type)
@@ -52,7 +53,7 @@
               (password-authentication? #f)
               (public-key-authentication? #t)
               (authorized-keys
-               `(("nazar" ,(local-file "/home/nazar/.ssh/thinkcentre-server.pub"))))))
+               `(("goat" ,(local-file "/home/goat/.ssh/thinkcentre-server.pub"))))))
     (service syncthing-service-type
              (syncthing-configuration (user "goat"))))
    %server-base-services))
@@ -60,13 +61,13 @@
 
  (swap-devices (list (swap-space
                       (target (uuid
-                               "c385eefa-1cb4-40e3-8262-ca744233163f")))))
+                               "04ba80bc-d72b-49ec-ba2e-778db698a25a")))))
 
  ;; The list of file systems that get "mounted".  The unique
  ;; file system identifiers there ("UUIDs") can be obtained
  ;; by running 'blkid' in a terminal.
  (file-systems (cons* (file-system
-                       (device (uuid "3fe2ea5f-47d9-4b3c-8a2a-709195c7935d" 'ext4))
+                       (device (uuid "a215ade6-018c-49c2-b653-467b15656836" 'ext4))
 		       (mount-point "/")
 		       (type "ext4")
 		       (check? #f))
