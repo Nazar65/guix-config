@@ -409,6 +409,7 @@
 (use-package orderless
   :ensure t
   :custom
+  (orderless-component-separator "[ &]")
   (orderless-matching-styles '(orderless-flex orderless-literal orderless-regexp))
   (completion-styles '(orderless partial-completion basic))
   (completion-category-defaults nil)
@@ -581,7 +582,6 @@
         read-process-output-max (* 1024 1024)
         treemacs-space-between-root-nodes nil
         company-idle-delay 0.0
-        lsp-completion-provider :none
         company-minimum-prefix-length 1
         lsp-idle-delay 0.1)
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]tmp\\'")
@@ -590,6 +590,9 @@
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]var\\'")
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]setup\\'")
   :hook
+  (clojure-mode-hook . lsp)
+  (clojurec-mode-hook . lsp)
+  (clojurescript-mode-hook . lsp)
   (php-mode . lsp)
   (lsp-completion-mode . (lambda ()
                            (setq-local completion-category-defaults
@@ -616,11 +619,12 @@
 (use-package company
  :ensure t
  :config
+ (defun just-one-face (fn &rest args)
+   (let ((orderless-match-faces [completions-common-part]))
+     (apply fn args)))
+ (advice-add 'company-capf--candidates :around #'just-one-face) 
  (setq company-idle-delay 0.3)
  (global-company-mode 1))
-
-(use-package company-lsp
-  :commands company-lsp)
 
 (use-package svg-lib
   :after kind-icon)

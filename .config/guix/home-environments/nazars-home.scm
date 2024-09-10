@@ -21,6 +21,7 @@
  (gnu packages golang)
  (gnu packages databases)
  (gnu packages xorg)
+ (gnu packages compression)
  (gnu packages matrix)
  (gnu packages)
  (gnu services)
@@ -40,6 +41,7 @@
 	direnv
         sqls
         go
+        unzip
         gopls
 	dunst
 	pinentry-emacs
@@ -105,7 +107,7 @@
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")
 			("package-burpee" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/burpee.scm --profile=/home/nazar/.guix-extra-profiles/burpee/")
-			("package-reinders" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/reinders.scm --profile=/home/nazar/.guix-extra-profiles/reinders/")))
+			))
 	     (bashrc (list (plain-file "bashrc" "\
                        eval \"$(direnv hook bash)\"\n
                      ")))
