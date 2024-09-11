@@ -13,6 +13,7 @@
   #:use-module (gnu services syncthing)
   #:use-module (gnu system)
   #:use-module (gnu machine)
+  #:use-module (gnu services linux)
   #:use-module (gnu packages linux)
   #:use-module (gnu machine ssh)
   #:use-module (gnu services ssh)
@@ -63,6 +64,7 @@
    (inherit server-operating-system)
    (packages %frigate-packages)
    (kernel linux-libre-apex-driver)
+   (kernel-loadable-modules (list gasket-dkms))
 
    (users
     (cons*
@@ -86,6 +88,10 @@
       (service network-manager-service-type)
       (service wpa-supplicant-service-type)
       (service dbus-root-service-type)
+      (simple-service 'add-extra-modules kernel-module-loader-service-type
+                      '("apex"
+                        "gasket"))
+
       (service oci-container-service-type
                (list
                 (oci-container-configuration
@@ -101,6 +107,7 @@
                  (extra-arguments
                   (list
                    (string-append "--privileged")
+                   (string-append "--device=/dev/apex_0")
                    (string-append "--shm-size=102m"))))))
       (service openssh-service-type
                (openssh-configuration
