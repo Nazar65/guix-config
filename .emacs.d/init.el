@@ -58,7 +58,7 @@
   (setq jiralib-update-issue-fields-exclude-list '(reporter))
   (setq org-jira-custom-jqls
   '(
-    (:jql " project = MAG AND assignee = currentUser() AND Sprint IN openSprints() AND status IN ('Code Review','Ready for Dev','New','In Design') ORDER BY priority DESC  "
+    (:jql " project = MAG AND (assignee = currentUser() OR assignee = EMPTY ) AND Sprint IN openSprints() AND status IN ('Ready for Dev','New','In Design','Blocked','On Hold') ORDER BY priority DESC"
           :limit 50
           :filename "nazars-current-tasks")
     (:jql " project = MAG AND assignee = currentUser() AND status IN ('To Estimate') ORDER BY priority DESC  "
@@ -73,9 +73,7 @@
     ))
 
   (defconst jiralib-token
-    '("Cookie" . (auth-source-pick-first-password
-                  :host "burpeeit.atlassian.com"
-                  :user "cookie" :type 'netrc :max 1))))
+    '("Cookie" . "cloud.session.token=eyJraWQiOiJzZXNzaW9uLXNlcnZpY2UvcHJvZC0xNTkyODU4Mzk0IiwiYWxnIjoiUlMyNTYifQ.eyJhc3NvY2lhdGlvbnMiOltdLCJzdWIiOiI2MjM4NDM4YWI3NWNhODAwNzA1NGZhYmEiLCJlbWFpbERvbWFpbiI6ImF0d2l4LmNvbSIsImltcGVyc29uYXRpb24iOltdLCJjcmVhdGVkIjoxNzMzOTI1OTIzLCJyZWZyZXNoVGltZW91dCI6MTczMzkyNjUyMywidmVyaWZpZWQiOnRydWUsImlzcyI6InNlc3Npb24tc2VydmljZSIsInNlc3Npb25JZCI6IjFkMjQyMjVkLTY3NDktNGYzYS04NWIyLTYwMWJkNTU0ZDM1MyIsInN0ZXBVcHMiOltdLCJvcmdJZCI6ImJiMjQzNDBlLTJlNWYtNDVjOC1hMDZiLWEyYzUxYzMwMDJiNSIsImF1ZCI6ImF0bGFzc2lhbiIsIm5iZiI6MTczMzkyNTkyMywiZXhwIjoxNzM2NTE3OTIzLCJpYXQiOjE3MzM5MjU5MjMsImVtYWlsIjoibi5rbG92YW55Y2hAYXR3aXguY29tIiwianRpIjoiMWQyNDIyNWQtNjc0OS00ZjNhLTg1YjItNjAxYmQ1NTRkMzUzIn0.w0Voiz3nXfHWrt6ewJIK6YAlDq6ZgFw6zHUAOs3RJTJTkJt-ZHce8nBcncvIpWvsWYUBJeqveIZLPtB4lUDbTAwNlM5q-dS-cKvKszvpwZ1luH4ugdR2ERwwgRnlBlz-ZGbk2intac9Oa7kbv-QMTIaUeb3HIqtPTD86_nFOxnJVqq9PWw_eACKywK6pP93bJq2JqVgonUR00gx_35G4sDaTp5aoEBv12Qt2UI3QhyhUYt8v2GourhdtaANEaeMI1uoDKXFszI88oURbPIOzE8Wfbk8rczxxjqgCw9jAJLf602fK3u2HvktmgGTsDHjWSYsfoA6CmKjHjPVRmO8geg")))
 
 (use-package desktop-environment
   :straight (:type git :host github :repo "DamienCassou/desktop-environment")
@@ -234,11 +232,11 @@
       "(maildir:/INBOX) AND flag:unread")
 
 (defun dw/polybar-vpn-status ()
-  (let ((vpn-status (shell-command-to-string
-                     "nmcli --mode tabular --terse connection show --active | grep vpn | cut -d ':' -f1"))
+  (let ((vpn-status (replace-regexp-in-string "\n$" "" (shell-command-to-string
+                     "nmcli --mode tabular --terse connection show --active | grep vpn | cut -d ':' -f1")))
         (result ""))
     (if (string-match "vpn" vpn-status)
-        (setq result ""))
+        (setq result (format " %s" vpn-status)))
     (format "VPN %s" result)))
 
 (defun dw/polybar-mail-count (max-count)
@@ -296,7 +294,7 @@
   (require 'exwm)
   (require 'exwm-randr)
   (exwm-enable)
-  (exwm-randr-enable)
+  (exwm-randr-mode)
   (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
   (add-hook 'exwm-init-hook #'efs/exwm-init-hook)
   (add-hook 'exwm-workspace-switch-hook #'dw/update-polybar-exwm)
@@ -460,30 +458,6 @@
           #'which-key--hide-popup-ignore-command)
         embark-become-indicator embark-action-indicator))
 
-(use-package erc
-  :hook
-  (erc-mode . abbrev-mode)
-  (erc-mode . erc-spelling-mode)
-  :bind (("s-<f12>" . #'connect-libera-irc))
-  :config
-  (defun connect-libera-irc ()
-    (interactive)
-    (erc-tls :server "irc.libera.chat" :port 6697 :nick "klovanych"))
-  (setq
-   erc-nick "klovanych"
-   erc-user-full-name "Nazar Klovanych"
-   erc-prompt-for-password nil
-   erc-log-channels-directory "~/Messages/ERC"
-   erc-autojoin-channels-alist
-   '(("#emacs"
-      "#guix"
-      "#libreboot"
-      "#org-mode"))
-   erc-modules
-   '(autoaway autojoin button completion fill sound
-              list match menu move-to-prompt netsplit networks noncommands ring stamp track
-              smiley notify notifications)))
-
 (use-package flyspell
   :straight (:type built-in)
   :init (flyspell-mode))
@@ -509,12 +483,60 @@
 ;; Global customizations
 ;; ===============================================
 
-(use-package doom-themes
-  :straight t
-  :init(load-theme 'doom-dark+ t)
-  :config
-  (doom-themes-visual-bell-config))
 
+(use-package bespoke-themes
+  :straight (:host github :repo "mclear-tools/bespoke-themes" :branch "main")
+  :config
+  ;; Set evil cursor colors
+  (setq bespoke-set-evil-cursors t)
+  ;; Set use of italics
+  (setq bespoke-set-italic-comments t
+        bespoke-set-italic-keywords t)
+  ;; Set variable pitch
+  (setq bespoke-set-variable-pitch t)
+  ;; Set initial theme variant
+  (setq bespoke-set-theme 'dark)
+  :init
+  ;; Load theme
+  (load-theme 'bespoke t))
+
+(use-package bespoke-modeline
+  :straight (:type git :host github :repo "mclear-tools/bespoke-modeline") 
+  :init
+  ;; Set header line
+  (setq bespoke-modeline-position 'bottom)
+  ;; Set mode-line height
+  (setq bespoke-modeline-size 3)
+  ;; Show diff lines in mode-line
+  (setq bespoke-modeline-git-diff-mode-line t)
+  ;; Set mode-line cleaner
+  (setq bespoke-modeline-cleaner t)
+  ;; Use mode-line visual bell
+  (setq bespoke-modeline-visual-bell t)
+  ;; Set vc symbol
+  (setq  bespoke-modeline-vc-symbol "G:")
+  :init
+  (bespoke-modeline-mode))
+
+;; Vertical window divider
+(use-package frame
+  :straight (:type built-in)
+  :custom
+  (window-divider-default-right-width 3)
+  (window-divider-default-bottom-width 1)
+  (window-divider-default-places 'right-only)
+  (window-divider-mode t))
+;; Make sure new frames use window-divider
+(add-hook 'before-make-frame-hook 'window-divider-mode)
+
+(use-package fontset
+  :straight (:type built-in) ;; only include this if you use straight
+  :config
+  ;; Use symbola for proper unicode
+  (when (member "Symbola" (font-family-list))
+    (set-fontset-font
+     t 'symbol "Symbola" nil)))
+        
 
 (use-package eat
  :straight (:type git
@@ -525,6 +547,13 @@
                ("terminfo/65" "terminfo/65/*")
                ("integration" "integration/*")
                (:exclude ".dir-locals.el" "*-tests.el"))))
+
+(use-package simple-http
+  :straight (:type git :host github :repo "/skeeto/emacs-web-server"))
+
+(require 'simple-httpd)
+(setq httpd-root "/home/nazar/Projects/klovanych.org/blog")
+(httpd-start)
 
 (use-package org-modern
   :straight (:type git :host github :repo "minad/org-modern")
@@ -560,25 +589,11 @@
 (use-package nerd-icons
   :straight (:type git :host github :repo "rainstormstudio/nerd-icons.el"))
 
-(use-package magit-file-icons
-  :straight (:type git :host github :repo "gekoke/magit-file-icons")
-  :init
-  (magit-file-icons-mode 1))
-
-(use-package doom-modeline
-  :straight (:type git :host github :repo "seagle0128/doom-modeline")
-  :hook (after-init . doom-modeline-mode)
-  :config
-  (setq doom-modeline-mu4e -1)
-  (setq doom-modeline-height 25)
-  (setq doom-modeline-buffer-encoding nil)
-  (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
-  (setq doom-modeline-vcs-max-length 32))
-
 (use-package lsp-mode
   :straight t
   :config
-  (setq gc-cons-threshold (* 100 1024 1024)
+  (setq lsp-headerline-breadcrumb-enable nil
+        gc-cons-threshold (* 100 1024 1024)
         read-process-output-max (* 1024 1024)
         treemacs-space-between-root-nodes nil
         company-idle-delay 0.0
@@ -791,23 +806,6 @@
 (use-package emojify
   :commands emojify-mode)
 
-(use-package ement
-  :straight (:host github :repo "alphapapa/ement.el")
-  :init
-  (defun efs/ement-connect ()
-    (interactive)
-    (ement-connect
-     :user-id "@nazar.klovanych:matrix.org"
-     :password (auth-source-pick-first-password
-                :host "matrix.org"
-                :user "token" :type 'netrc :max 1)
-     :uri-prefix "http://localhost:8009"))
-  :hook ((ement-room-list-mode . emojify-mode)
-	 (ement-room-mode . emojify-mode))
-  :config
-  (setf use-default-font-for-symbols nil)
-  (set-fontset-font t 'unicode "Noto Emoji" nil 'append))
-
 (use-package slack
   :straight (:host github :repo "isamert/emacs-slack")
   :config
@@ -864,8 +862,9 @@
   :straight (:type git :host github :repo "magit/forge"))
 
 (use-package magit
-  :straight (:type git :host github :repo "magit/magit")
+  :straight (:type git :host github :repo "magit/magit" branch: "master" (:defaults "lisp/*"))
   :config
+  (require 'git-commit)
   (global-set-key (kbd "C-x g") 'magit-status))
 
 (use-package diff-hl
@@ -892,4 +891,4 @@
 ;;; init.el ends here
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
-(put 'magit-clean 'disabled nil)
+

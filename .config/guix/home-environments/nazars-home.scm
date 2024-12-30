@@ -1,4 +1,4 @@
-;; This "home-environment" file can be passed to 'guix home reconfigure'
+; This "home-environment" file can be passed to 'guix home reconfigure'
 ;; to reproduce the content of your profile.  This is "symbolic": it only
 ;; specifies package names.  To reproduce the exact same profile, you also
 ;; need to capture the channels being used, as returned by "guix describe".
@@ -23,6 +23,9 @@
  (gnu packages xorg)
  (gnu packages compression)
  (gnu packages matrix)
+ (gnu packages web-browsers)
+ (gnu packages gstreamer)
+ (gnu packages speech)
  (gnu packages)
  (gnu services)
  (guix gexp)
@@ -51,7 +54,6 @@
 	pavucontrol
 	compton
 	openvpn
-	pantalaimon
 	icecat))
 
  (services
@@ -78,16 +80,6 @@
 		(auto-start? #t)
 		(respawn? #f))
 	       (shepherd-service
-		(documentation "Run pantalaimon™")
-		(provision '(pantalaimon))
-		(start #~(make-forkexec-constructor
-                          (list #$(file-append pantalaimon "/bin/pantalaimon"))
-                          #:log-file "/home/nazar/.config/shepherd/pantalaimon.log"))
-		(stop #~(make-kill-destructor))
-		;; Needs gpg key to unlock.
-		(auto-start? #t)
-		(respawn? #f))
-	       (shepherd-service
 		(documentation "Run dunst-daemon™")
 		(provision '(dunst-daemon))
 		(start #~(make-forkexec-constructor
@@ -107,6 +99,7 @@
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")
 			("package-burpee" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/burpee.scm --profile=/home/nazar/.guix-extra-profiles/burpee/")
+                        ("depoy-thinkcentre-erver" . "guix deploy ~/guix-system/.config/guix/hosts/thinkcentre-m92p.scm -L ~/guix-system/.config/guix/hosts/modules/ $*")
 			))
 	     (bashrc (list (plain-file "bashrc" "\
                        eval \"$(direnv hook bash)\"\n
