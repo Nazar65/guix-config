@@ -321,6 +321,7 @@
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
     (epa-file-enable)
     (pinentry-start)
+    (load-theme 'bespoke t)
     (direnv-mode)
     (about-emacs)
   (setq exwm-layout-show-all-buffers t)
@@ -514,7 +515,7 @@
   ;; Use mode-line visual bell
   (setq bespoke-modeline-visual-bell t)
   ;; Set vc symbol
-  (setq  bespoke-modeline-vc-symbol "G:")
+  (setq  bespoke-modeline-vc-symbol " branch: ")
   :init
   (bespoke-modeline-mode))
 
