@@ -72,8 +72,10 @@
           :filename "in-dev-tickets")
     ))
 
-  (defconst jiralib-token
-    '("Cookie" . "cloud.session.token=eyJraWQiOiJzZXNzaW9uLXNlcnZpY2UvcHJvZC0xNTkyODU4Mzk0IiwiYWxnIjoiUlMyNTYifQ.eyJhc3NvY2lhdGlvbnMiOltdLCJzdWIiOiI2MjM4NDM4YWI3NWNhODAwNzA1NGZhYmEiLCJlbWFpbERvbWFpbiI6ImF0d2l4LmNvbSIsImltcGVyc29uYXRpb24iOltdLCJjcmVhdGVkIjoxNzMzOTI1OTIzLCJyZWZyZXNoVGltZW91dCI6MTczMzkyNjUyMywidmVyaWZpZWQiOnRydWUsImlzcyI6InNlc3Npb24tc2VydmljZSIsInNlc3Npb25JZCI6IjFkMjQyMjVkLTY3NDktNGYzYS04NWIyLTYwMWJkNTU0ZDM1MyIsInN0ZXBVcHMiOltdLCJvcmdJZCI6ImJiMjQzNDBlLTJlNWYtNDVjOC1hMDZiLWEyYzUxYzMwMDJiNSIsImF1ZCI6ImF0bGFzc2lhbiIsIm5iZiI6MTczMzkyNTkyMywiZXhwIjoxNzM2NTE3OTIzLCJpYXQiOjE3MzM5MjU5MjMsImVtYWlsIjoibi5rbG92YW55Y2hAYXR3aXguY29tIiwianRpIjoiMWQyNDIyNWQtNjc0OS00ZjNhLTg1YjItNjAxYmQ1NTRkMzUzIn0.w0Voiz3nXfHWrt6ewJIK6YAlDq6ZgFw6zHUAOs3RJTJTkJt-ZHce8nBcncvIpWvsWYUBJeqveIZLPtB4lUDbTAwNlM5q-dS-cKvKszvpwZ1luH4ugdR2ERwwgRnlBlz-ZGbk2intac9Oa7kbv-QMTIaUeb3HIqtPTD86_nFOxnJVqq9PWw_eACKywK6pP93bJq2JqVgonUR00gx_35G4sDaTp5aoEBv12Qt2UI3QhyhUYt8v2GourhdtaANEaeMI1uoDKXFszI88oURbPIOzE8Wfbk8rczxxjqgCw9jAJLf602fK3u2HvktmgGTsDHjWSYsfoA6CmKjHjPVRmO8geg")))
+    (defconst jiralib-token
+    '("Cookie" . (auth-source-pick-first-password
+                  :host "burpeeit.atlassian.com"
+                  :user "cookie" :type 'netrc :max 1))))
 
 (use-package desktop-environment
   :straight (:type git :host github :repo "DamienCassou/desktop-environment")
@@ -283,6 +285,14 @@
       (kill-process efs/polybar-process)))
   (setq efs/polybar-process nil))
 
+(defun efs/start-compton ()
+  (interactive)
+  (start-process "compton" "compton" "compton" "--backend" "glx" "--vsync" "opengl-swc"))
+
+(defun efs/start-dunst ()
+  (interactive)
+  (start-process "dunst" "dunst" "dunst"))
+
 (defun efs/start-panel ()
   (interactive)
   (efs/kill-panel)
@@ -316,12 +326,12 @@
     (server-start)
     (exwm-workspace-switch-create 1)
     (efs/start-panel)
+    (efs/start-dunst)
     (pixel-scroll-mode)
     (set-frame-parameter (selected-frame) 'alpha '(90 . 85))
     (add-to-list 'default-frame-alist '(alpha . (90 . 85))))
     (epa-file-enable)
     (pinentry-start)
-    (load-theme 'bespoke t)
     (direnv-mode)
     (about-emacs)
   (setq exwm-layout-show-all-buffers t)
@@ -370,8 +380,8 @@
            "xrandr" nil nil nil
 	   "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
-          (setq exwm-randr-workspace-monitor-plist (list 1 (match-string 1) 0 default-output))))
-      (shell-command "herd restart compton"))))
+          (setq exwm-randr-workspace-monitor-plist (list 1 (match-string 1) 0 default-output))
+          (efs/start-compton))))))
 
 (use-package async
   :after bytecomp
@@ -496,9 +506,9 @@
   ;; Set variable pitch
   (setq bespoke-set-variable-pitch t)
   ;; Set initial theme variant
-  (setq bespoke-set-theme 'dark)
   :init
   ;; Load theme
+  (setq bespoke-set-theme 'dark)
   (load-theme 'bespoke t))
 
 (use-package bespoke-modeline
