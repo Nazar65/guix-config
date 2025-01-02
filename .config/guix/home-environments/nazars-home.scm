@@ -29,11 +29,14 @@
  (gnu packages)
  (gnu services)
  (guix gexp)
+ (gnu services dbus)
+ (gnu services xorg)
  (gnu home services shepherd)
  (gnu home services)
  (gnu home services desktop)
  (gnu home services gnupg)
  (gnu home services shells)
+ (gnu home services desktop)
  (gnu packages shellutils)
  (gnu packages shells))
 
@@ -64,31 +67,6 @@
               (file-append pinentry-emacs "/bin/pinentry-emacs"))
              (ssh-support? #t)))
    (service home-dbus-service-type)
-   (service home-shepherd-service-type
-            (home-shepherd-configuration
-             (services
-              (list
-	       (shepherd-service
-		(documentation "Run compton compositor™")
-		(provision '(compton))
-		(start #~(make-forkexec-constructor
-                          (list #$(file-append compton "/bin/compton")
-				"--backend" "glx"
-				"--vsync" "opengl-swc")
-			  #:log-file "/home/nazar/.config/shepherd/compton-daemon.log"))
-		(stop #~(make-kill-destructor))
-		(auto-start? #t)
-		(respawn? #f))
-	       (shepherd-service
-		(documentation "Run dunst-daemon™")
-		(provision '(dunst-daemon))
-		(start #~(make-forkexec-constructor
-                          (list #$(file-append dunst "/bin/dunst"))
-			  #:user "nazar"
-			  #:log-file "/home/nazar/.config/shepherd/dunst-daemon.log"))
-		(stop #~(make-kill-destructor))
-		(auto-start? #t)
-		(respawn? #f))))))
    (service home-bash-service-type
             (home-bash-configuration
 	     (aliases '(
