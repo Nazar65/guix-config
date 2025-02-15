@@ -48,7 +48,6 @@
         sqls
         go
         unzip
-        gopls
 	dunst
 	pinentry-emacs
 	font-google-noto-emoji
@@ -66,18 +65,21 @@
              (pinentry-program
               (file-append pinentry-emacs "/bin/pinentry-emacs"))
              (ssh-support? #t)))
+
    (service home-dbus-service-type)
    (service home-bash-service-type
             (home-bash-configuration
 	     (aliases '(
 			("magento-cloud" . "/home/nazar/.magento-cloud/bin/magento-cloud")
                         ("php" . "php -d memory_limit=-1 $*")
-			("build-container" . "build_container() { guix system container ~/guix-system/.config/guix/containers/web-development/php/$1.scm --network --share=$HOME/Projects/$1=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/ --share=$HOME/db_dumps --share=$HOME/containers/mariadb-state=/var/lib/mysql; }; build_container")
+			("build-burpee-container" . "guix system container ~/guix-system/.config/guix/containers/web-development/php/burpee.scm --network --share=$HOME/Projects/burpee=/srv/http --share=$HOME/guix-system --share=$HOME/.guix-profile -L ~/guix-system/.config/guix/containers/web-development/ --share=$HOME/db_dumps --share=$HOME/containers/mariadb-state=/var/lib/mysql")
+                        ("build-sharkgaming-container" . "guix system container ~/guix-system/.config/guix/containers/web-development/php/sharkgaming.scm --network --share=$HOME/Projects/sharkgaming=/srv/http --share=$HOME/guix-system -L ~/guix-system/.config/guix/containers/web-development/ --share=$HOME/db_dumps --share=$HOME/containers/shrakgaming-mariadb-state=/var/lib/mysql")
 			("reconfigure-nazars-home" . "guix home reconfigure ~/guix-system/.config/guix/home-environments/nazars-home.scm")
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")
 			("package-burpee" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/burpee.scm --profile=/home/nazar/.guix-extra-profiles/burpee/")
-                        ("depoy-thinkcentre-erver" . "guix deploy ~/guix-system/.config/guix/hosts/thinkcentre-m92p.scm -L ~/guix-system/.config/guix/hosts/modules/ $*")
+                        ("package-shark" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/sharkgaming.scm --profile=/home/nazar/.guix-extra-profiles/sharkgaming/")
+                        ("depoy-thinkcentre-server" . "guix deploy ~/guix-system/.config/guix/hosts/thinkcentre-m92p.scm -L ~/guix-system/.config/guix/hosts/modules/ $*")
 			))
 	     (bashrc (list (plain-file "bashrc" "\
                        eval \"$(direnv hook bash)\"\n

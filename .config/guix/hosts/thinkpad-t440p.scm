@@ -63,6 +63,8 @@
    (append
     (list
      (specification->package "direnv")
+     (specification->package "docker")
+     (specification->package "docker-cli")
      (specification->package "offlineimap3")
      (specification->package "clojure")
      (specification->package "clojure-tools")
@@ -97,6 +99,8 @@
      (service opensmtpd-service-type
               (opensmtpd-configuration
                (config-file (local-file "../my-smtpd.conf"))))
+     (service docker-service-type)
+     (service containerd-service-type)   
      (set-xorg-configuration
       (xorg-configuration
        (keyboard-layout %keyboard-layout)

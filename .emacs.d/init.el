@@ -133,7 +133,6 @@
   (history-delete-duplicates t)
   (display-time-default-load-average nil)
   (history-length 600)
-  (put 'dired-find-alternate-file 'disabled nil)
   (warning-minimum-level :emergency)
   (display-time-mail-string "")
   (display-time-day-and-date nil)
@@ -159,12 +158,20 @@
       (sql-user "burpee")
       (sql-password "burpee")
       (sql-database "burpee")
+      (sql-port 3306))
+     (mysql-local-shark
+      (sql-product 'mysql)
+      (sql-server "127.0.0.1")
+      (sql-user "sharkgaming")
+      (sql-password "sharkgaming")
+      (sql-database "sharkgaming")
       (sql-port 3306))))
   :config
   (add-hook 'sql-mode-hook 'lsp)
   (setq lsp-sqls-workspace-config-path nil)
   (setq lsp-sqls-connections
-        '(((driver . "mysql") (dataSourceName . "burpee:burpee@tcp(127.0.0.1:3306)/burpee")))))
+        '(((driver . "mysql") (dataSourceName . "burpee:burpee@tcp(127.0.0.1:3306)/burpee"))
+          ((driver . "mysql") (dataSourceName . "sharkgaming:sharkgaming@tcp(127.0.0.1:3306)/sharkgaming")))))
 
         
 (use-package tramp
@@ -285,6 +292,11 @@
       (kill-process efs/polybar-process)))
   (setq efs/polybar-process nil))
 
+(defun efs/kill-compton ()
+  (interactive)
+  (ignore-errors
+      (kill-process "compton")))
+
 (defun efs/start-compton ()
   (interactive)
   (start-process "compton" "compton" "compton" "--backend" "glx" "--vsync" "opengl-swc"))
@@ -380,8 +392,9 @@
            "xrandr" nil nil nil
 	   "--output" (match-string 1) "--primary"  "--auto" "--above" default-output "--rotate" "normal"
 	   "--output" default-output "--auto" "--rotate" "normal")
-          (setq exwm-randr-workspace-monitor-plist (list 1 (match-string 1) 0 default-output))
-          (efs/start-compton))))))
+          (setq exwm-randr-workspace-monitor-plist (list 1 (match-string 1) 0 default-output)))))
+    (efs/kill-compton)
+    (efs/start-compton)))
 
 (use-package async
   :after bytecomp
@@ -511,6 +524,14 @@
   (setq bespoke-set-theme 'dark)
   (load-theme 'bespoke t))
 
+(use-package fontset
+  :straight (:type built-in) ;; only include this if you use straight
+  :config
+  ;; Use symbola for proper unicode
+  (when (member "Symbola" (font-family-list))
+    (set-fontset-font
+     t 'symbol "Symbola" nil)))
+        
 (use-package bespoke-modeline
   :straight (:type git :host github :repo "mclear-tools/bespoke-modeline") 
   :init
@@ -562,6 +583,9 @@
 (use-package simple-http
   :straight (:type git :host github :repo "/skeeto/emacs-web-server"))
 
+(use-package weblorg
+  :straight (:type git :host github :repo "emacs-love/weblorg"))
+
 (require 'simple-httpd)
 (setq httpd-root "/home/nazar/Projects/klovanych.org/blog")
 (httpd-start)
@@ -579,7 +603,6 @@
   :straight (:type git :host github :repo "doublep/logview"))
 
 (use-package mu4e
-  :after exwm
   :straight (:type built-in)
   :init (load "~/.emacs.d/mu4e-config.el")
   :config
@@ -903,3 +926,4 @@
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
 
+(put 'dired-find-alternate-file 'disabled nil)

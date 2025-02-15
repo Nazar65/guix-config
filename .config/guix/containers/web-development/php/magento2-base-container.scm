@@ -65,9 +65,9 @@
    (services
     (cons* (service redis-service-type)
            (simple-service 'set-permissions
-                                   activation-service-type
-                                   set-permissions-gexp)
-	   (service nginx-service-type
+                           activation-service-type
+                           set-permissions-gexp)
+           (service nginx-service-type
 		    (nginx-configuration
 		     (server-blocks
                       (list (nginx-server-configuration
@@ -81,7 +81,7 @@
 
 	   (service php-fpm-service-type
 		    (php-fpm-configuration
-		     (php %active-php-package)
+		     (php php81)
 		     (socket %php-socket-path)
 		     (user "nazar")
 		     (group "users")

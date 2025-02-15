@@ -95,7 +95,7 @@
       (service oci-container-service-type
                (list
                 (oci-container-configuration
-                 (image "ghcr.io/blakeblackshear/frigate:0.14.1")
+                 (image "ghcr.io/blakeblackshear/frigate:0.15.0-rc2")
                  (provision "frigate")
                  (network "host")
                  (ports
@@ -109,7 +109,7 @@
                   (list
                    (string-append "--privileged")
                    (string-append "--device=/dev/apex_0")
-                   (string-append "--shm-size=102m"))))))
+                   (string-append "--shm-size=252m"))))))
       (service openssh-service-type
                (openssh-configuration
                 (x11-forwarding? #t)
