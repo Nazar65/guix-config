@@ -141,6 +141,7 @@
                     ("8554" . "8554")))
                  (volumes
                   '("/home/goat/frigate/config:/config"
+                    "/etc/localtime:/etc/localtime:ro"
                     "/home/goat/frigate/storage:/media/frigate"))
                  (extra-arguments
                   (list

@@ -94,7 +94,6 @@
   (services
    (append
     (list
-     (service docker-service-type)
      (service opensmtpd-service-type
               (opensmtpd-configuration
                (config-file (local-file "../my-smtpd.conf"))))

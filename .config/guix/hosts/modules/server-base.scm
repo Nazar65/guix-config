@@ -50,6 +50,7 @@
   (append
    (list
     (service tor-service-type)
+    (service ntp-service-type)
     (service docker-service-type)
     (service zram-device-service-type
 	     (zram-device-configuration

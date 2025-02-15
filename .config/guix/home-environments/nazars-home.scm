@@ -1,4 +1,4 @@
-;; This "home-environment" file can be passed to 'guix home reconfigure'
+; This "home-environment" file can be passed to 'guix home reconfigure'
 ;; to reproduce the content of your profile.  This is "symbolic": it only
 ;; specifies package names.  To reproduce the exact same profile, you also
 ;; need to capture the channels being used, as returned by "guix describe".
@@ -23,14 +23,20 @@
  (gnu packages xorg)
  (gnu packages compression)
  (gnu packages matrix)
+ (gnu packages web-browsers)
+ (gnu packages gstreamer)
+ (gnu packages speech)
  (gnu packages)
  (gnu services)
  (guix gexp)
+ (gnu services dbus)
+ (gnu services xorg)
  (gnu home services shepherd)
  (gnu home services)
  (gnu home services desktop)
  (gnu home services gnupg)
  (gnu home services shells)
+ (gnu home services desktop)
  (gnu packages shellutils)
  (gnu packages shells))
 
@@ -51,7 +57,6 @@
 	pavucontrol
 	compton
 	openvpn
-	pantalaimon
 	icecat))
 
  (services
@@ -62,41 +67,6 @@
               (file-append pinentry-emacs "/bin/pinentry-emacs"))
              (ssh-support? #t)))
    (service home-dbus-service-type)
-   (service home-shepherd-service-type
-            (home-shepherd-configuration
-             (services
-              (list
-	       (shepherd-service
-		(documentation "Run compton compositor™")
-		(provision '(compton))
-		(start #~(make-forkexec-constructor
-                          (list #$(file-append compton "/bin/compton")
-				"--backend" "glx"
-				"--vsync" "opengl-swc")
-			  #:log-file "/home/nazar/.config/shepherd/compton-daemon.log"))
-		(stop #~(make-kill-destructor))
-		(auto-start? #t)
-		(respawn? #f))
-	       (shepherd-service
-		(documentation "Run pantalaimon™")
-		(provision '(pantalaimon))
-		(start #~(make-forkexec-constructor
-                          (list #$(file-append pantalaimon "/bin/pantalaimon"))
-                          #:log-file "/home/nazar/.config/shepherd/pantalaimon.log"))
-		(stop #~(make-kill-destructor))
-		;; Needs gpg key to unlock.
-		(auto-start? #t)
-		(respawn? #f))
-	       (shepherd-service
-		(documentation "Run dunst-daemon™")
-		(provision '(dunst-daemon))
-		(start #~(make-forkexec-constructor
-                          (list #$(file-append dunst "/bin/dunst"))
-			  #:user "nazar"
-			  #:log-file "/home/nazar/.config/shepherd/dunst-daemon.log"))
-		(stop #~(make-kill-destructor))
-		(auto-start? #t)
-		(respawn? #f))))))
    (service home-bash-service-type
             (home-bash-configuration
 	     (aliases '(
@@ -107,6 +77,7 @@
 			("reconfigure-x220" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-x220.scm")
 			("reconfigure-t440p" . "sudo guix system reconfigure -L ~/guix-system/.config/guix/hosts/modules/ ~/guix-system/.config/guix/hosts/thinkpad-t440p.scm")
 			("package-burpee" . "guix package --manifest=/home/nazar/guix-system/.config/guix/manifests/burpee.scm --profile=/home/nazar/.guix-extra-profiles/burpee/")
+                        ("depoy-thinkcentre-erver" . "guix deploy ~/guix-system/.config/guix/hosts/thinkcentre-m92p.scm -L ~/guix-system/.config/guix/hosts/modules/ $*")
 			))
 	     (bashrc (list (plain-file "bashrc" "\
                        eval \"$(direnv hook bash)\"\n
