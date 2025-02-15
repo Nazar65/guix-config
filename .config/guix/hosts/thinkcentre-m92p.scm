@@ -13,6 +13,8 @@
   #:use-module (gnu services syncthing)
   #:use-module (gnu system)
   #:use-module (gnu machine)
+  #:use-module (gnu services web)
+  #:use-module (gnu services certbot)
   #:use-module (gnu services linux)
   #:use-module (gnu packages linux)
   #:use-module (gnu machine ssh)
@@ -37,13 +39,13 @@
 
 (define %my-server-services
   (modify-services
-      %server-base-services
-    (udev-service-type
-     config => (udev-configuration
-                (inherit config)
-	        (rules (append
-		        (udev-configuration-rules config)
-		        (list %google-coral-tpu-udev-rule)))))))
+   %server-base-services
+   (udev-service-type
+    config => (udev-configuration
+               (inherit config)
+	       (rules (append
+		       (udev-configuration-rules config)
+		       (list %google-coral-tpu-udev-rule)))))))
 
 (define %default-extra-linux-options ((@@ (gnu packages linux) default-extra-linux-options) linux-libre-version))
 
@@ -58,7 +60,14 @@
    #:extra-options (append
                     `(("CONFIG_STAGING_APEX_DRIVER" . #t))
                     %default-extra-linux-options)))
- 
+
+(define %nginx-deploy-hook
+  (program-file
+   "nginx-deploy-hook"
+   #~(let ((pid (call-with-input-file "/var/run/nginx/pid" read)))
+       (kill pid SIGHUP))))
+
+
 (define %thinkcentre-server
   (operating-system
    (inherit server-operating-system)
@@ -92,6 +101,35 @@
                       '("apex"
                         "gasket"))
 
+      (service nginx-service-type
+               (nginx-configuration
+                (server-blocks
+                 (list (nginx-server-configuration
+                        (listen '("80"))
+                        (locations `(,(nginx-location-configuration
+                                       (uri "/")
+                                       (body
+                                        (list "return 301 https://$host$request_uri;"))))))
+                       (nginx-server-configuration
+                        (listen '("443 ssl"))
+                        (server-name '("192.168.88.12"))
+                        (root "/srv/http/klovanych.org/")
+                        (index '("index.html"))
+                        (locations
+                         (list
+                          (nginx-php-location)))
+                        (ssl-certificate-key "/etc/letsencrypt/live/klovanych.org/privkey.pem")
+                        (ssl-certificate "/etc/letsencrypt/live/klovanych.org/fullchain.pem"))))))
+      (service certbot-service-type
+               (certbot-configuration
+                (email "nazarn96@gmail.com")
+                (webroot "/srv/http/klovanych.org/")
+                (certificates
+                 (list
+                  (certificate-configuration
+                   (domains '("klovanych.org" "www.klovanych.org"))
+                   (deploy-hook %nginx-deploy-hook))))))
+            
       (service oci-container-service-type
                (list
                 (oci-container-configuration
