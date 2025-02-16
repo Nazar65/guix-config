@@ -20,6 +20,8 @@
                   (url "https://github.com/google/gasket-driver")
                   (commit "5815ee3908a46a415aac616ac7b9aedcb98a504c")))
             (file-name (git-file-name name version))
+            (patches
+	       (search-patches "patches/gasket-dkms-fix-6.12-kernel-build.patch"))
             (sha256
              (base32
               "1zv1n6lpgc6ay9i6w5q38nbaj3jpk3x0xxfmnlwzdm94radgwpiv"))))
