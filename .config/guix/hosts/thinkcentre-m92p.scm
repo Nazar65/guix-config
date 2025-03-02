@@ -133,7 +133,7 @@
       (service oci-container-service-type
                (list
                 (oci-container-configuration
-                 (image "ghcr.io/blakeblackshear/frigate:0.15.0-rc2")
+                 (image "ghcr.io/blakeblackshear/frigate:0.15.0")
                  (provision "frigate")
                  (network "host")
                  (ports
