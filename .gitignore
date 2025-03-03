@@ -10,4 +10,4 @@
 .emacs.d/straight/
 .emacs.d/transient/
 Pictures/*.png
-containers
+containers/*
